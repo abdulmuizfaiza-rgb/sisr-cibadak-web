@@ -748,10 +748,15 @@ function loginAs(username, userData){
   state.user = Object.assign({username: username, role: role, sub_rayon_id: userData.sub_rayon_id||null}, userData);
   state.view = 'dashboard_ops';
   state.showChangePassword = !!userData.must_change_password;
+  try { sessionStorage.setItem('sisrSesi', JSON.stringify({username: username, role: role})); } catch(e){ /* browser tanpa sessionStorage, abaikan */ }
   render();
 }
 function switchLoginTab(tab){ state.loginTab = tab; render(); }
-function logout(){ state.user = null; state.view='login'; state.viewingYear = null; state.toast = null; render(); }
+function logout(){
+  state.user = null; state.view='login'; state.viewingYear = null; state.toast = null;
+  try { sessionStorage.removeItem('sisrSesi'); } catch(e){ /* abaikan */ }
+  render();
+}
 function adaVerifikasiSaldoTidakSama(){
   if(typeof laporanBpkList==='undefined' || !state.user) return false;
   const list = laporanBpkList.filter(function(x){ return state.user.role==='superadmin' || x.input_by===state.user.username; });
@@ -8862,6 +8867,28 @@ function unduhLampiran2cPdf(){
 // ============================================================
 // START
 // ============================================================
+async function cobaPulihkanSesi(){
+  let sesi;
+  try { sesi = JSON.parse(sessionStorage.getItem('sisrSesi')); } catch(e){ return; }
+  if(!sesi || !sesi.username || !sesi.role) return;
+  try {
+    const daftar = await api.get(sesi.role==='superadmin' ? '/akun/superadmin' : '/akun/admin');
+    const userData = daftar.find(function(a){ return a.username === sesi.username; });
+    if(!userData){ sessionStorage.removeItem('sisrSesi'); return; } // akun sudah dihapus/tidak ada lagi
+    // state.user WAJIB di-set SEBELUM muatDataAwal() dipanggil (beberapa pemanggilan API
+    // di dalamnya butuh state.user.username sudah tersedia), baru loginAs() difinalisasi setelahnya.
+    state.user = Object.assign({username: sesi.username, role: sesi.role, sub_rayon_id: userData.sub_rayon_id||null}, userData);
+    state.loadingAwal = true;
+    render();
+    await muatDataAwal();
+    state.loadingAwal = false;
+    loginAs(sesi.username, userData);
+  } catch(e){
+    // Gagal pulihkan sesi (misal koneksi bermasalah) -- biarkan saja tampil layar login biasa, jangan menghalangi.
+    state.loadingAwal = false;
+    state.user = null;
+  }
+}
 async function mulaiAplikasi(){
   const el = document.getElementById('app');
   el.innerHTML = '<div class="d-flex align-items-center justify-content-center" style="height:100vh;"><div class="text-center"><div class="spinner-border text-primary mb-3" role="status"></div><div>Menyiapkan aplikasi...</div></div></div>';
@@ -8873,6 +8900,9 @@ async function mulaiAplikasi(){
     el.innerHTML = '<div class="d-flex align-items-center justify-content-center" style="height:100vh;"><div class="text-center"><div class="spinner-border text-primary mb-3" role="status"></div><div>Menunggu database siap...</div></div></div>';
     setTimeout(mulaiAplikasi, 1500);
     return;
+  }
+  if(!state.perluSetupAwal){
+    await cobaPulihkanSesi();
   }
   render();
 }
