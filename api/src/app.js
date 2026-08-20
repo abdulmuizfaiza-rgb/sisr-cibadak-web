@@ -21,7 +21,19 @@ app.get('/api/run-migration', async (req, res) => {
       );
     `);
     await pool.query(`INSERT INTO app_settings (id) VALUES (1) ON CONFLICT (id) DO NOTHING;`);
-    res.json({ status: 'ok', pesan: 'Tabel app_settings berhasil dibuat/dipastikan ada.' });
+    await pool.query(`ALTER TABLE app_settings ADD COLUMN IF NOT EXISTS dashboard_chart_config JSONB NOT NULL DEFAULT '{}'::jsonb;`);
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS informasi_popup (
+        id INT PRIMARY KEY DEFAULT 1 CHECK (id = 1),
+        aktif BOOLEAN NOT NULL DEFAULT false,
+        ikon TEXT NOT NULL DEFAULT 'info',
+        judul TEXT,
+        pesan TEXT,
+        diperbarui_pada TIMESTAMPTZ NOT NULL DEFAULT now()
+      );
+    `);
+    await pool.query(`INSERT INTO informasi_popup (id) VALUES (1) ON CONFLICT (id) DO NOTHING;`);
+    res.json({ status: 'ok', pesan: 'Tabel app_settings dan informasi_popup berhasil dibuat/dipastikan ada.' });
   } catch (err) {
     res.status(500).json({ status: 'error', error: err.message });
   }
