@@ -1,10 +1,12 @@
 {
-  "buildCommand": null,
-  "outputDirectory": "public",
-  "functions": {
-    "api/[...path].js": {
-      "memory": 512,
-      "maxDuration": 15
-    }
-  }
+  "version": 2,
+  "builds": [
+    { "src": "api/index.js", "use": "@vercel/node", "config": { "includeFiles": "api/src/**" } },
+    { "src": "public/**", "use": "@vercel/static" }
+  ],
+  "routes": [
+    { "src": "/api/(.*)", "dest": "/api/index.js" },
+    { "src": "/vendor/(.*)", "dest": "/public/vendor/$1" },
+    { "src": "/(.*)", "dest": "/public/index.html" }
+  ]
 }
