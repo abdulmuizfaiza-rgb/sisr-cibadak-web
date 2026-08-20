@@ -33,6 +33,7 @@ app.get('/api/run-migration', async (req, res) => {
       );
     `);
     await pool.query(`INSERT INTO informasi_popup (id) VALUES (1) ON CONFLICT (id) DO NOTHING;`);
+    await pool.query(`ALTER TABLE informasi_popup ADD COLUMN IF NOT EXISTS tanggal_tayang TIMESTAMPTZ;`);
     res.json({ status: 'ok', pesan: 'Tabel app_settings dan informasi_popup berhasil dibuat/dipastikan ada.' });
   } catch (err) {
     res.status(500).json({ status: 'error', error: err.message });
