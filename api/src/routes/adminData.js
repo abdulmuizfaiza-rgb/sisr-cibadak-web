@@ -204,6 +204,40 @@ router.post('/auth/reset-password-default', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+// ============ PENGATURAN TAMPILAN (Superadmin) ============
+router.get('/pengaturan-tampilan', async (req, res) => {
+  try {
+    const { rows } = await pool.query('SELECT * FROM app_settings WHERE id = 1');
+    res.json(rows[0] || {});
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+router.put('/pengaturan-tampilan', async (req, res) => {
+  const { login_background, sidebar_color, page_bg_color, font_color, font_size, logo } = req.body;
+  try {
+    const { rows } = await pool.query(
+      `UPDATE app_settings SET
+         login_background = COALESCE($1, login_background),
+         sidebar_color = COALESCE($2, sidebar_color),
+         page_bg_color = COALESCE($3, page_bg_color),
+         font_color = COALESCE($4, font_color),
+         font_size = COALESCE($5, font_size),
+         logo = COALESCE($6, logo),
+         diperbarui_pada = now()
+       WHERE id = 1 RETURNING *`,
+      [login_background||null, sidebar_color||null, page_bg_color||null, font_color||null, font_size||null, logo||null]
+    );
+    res.json(rows[0]);
+  } catch (err) { res.status(400).json({ error: err.message }); }
+});
+router.post('/pengaturan-tampilan/reset', async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      `UPDATE app_settings SET login_background=NULL, sidebar_color=NULL, page_bg_color=NULL, font_color=NULL, font_size=NULL, logo=NULL, diperbarui_pada=now() WHERE id=1 RETURNING *`
+    );
+    res.json(rows[0]);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
 // ============ INFORMASI ============
 router.get('/informasi', async (req, res) => {
   try {
