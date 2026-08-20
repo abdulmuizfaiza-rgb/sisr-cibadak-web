@@ -8,8 +8,14 @@ app.use(express.json({ limit: '5mb' }));
 
 app.get('/api/health', async (req, res) => {
   try {
-    await pool.query('SELECT 1');
-    res.json({ status: 'ok', database: 'terhubung' });
+    const cek = await pool.query('SELECT current_database() AS db, inet_server_addr()::text AS host');
+    const tabel = await pool.query("SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_name='app_settings'");
+    res.json({
+      status: 'ok',
+      database_terhubung: cek.rows[0].db,
+      host_server: cek.rows[0].host,
+      tabel_app_settings_ada: tabel.rows.length > 0,
+    });
   } catch (err) {
     res.status(500).json({ status: 'error', error: err.message });
   }
