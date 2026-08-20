@@ -2133,10 +2133,10 @@ function viewDashboard(){
   if(tab==='bosp' && !bisaBosp) tab = 'ops';
   if(tab !== state.dashboardTab) state.dashboardTab = tab;
 
-  let tabsHtml = '<ul class="nav nav-pills mb-3" style="background:#f2f4f7;border-radius:8px;padding:4px;display:inline-flex;">';
-  if(bisaOps) tabsHtml += '<li class="nav-item"><a class="nav-link'+(tab==='ops'?' active':'')+'" style="cursor:pointer;border-radius:6px;font-size:13.5px;padding:6px 16px;" '+act('switchDashboardTab',['ops'])+'>Dashboard Data OPS</a></li>';
-  if(bisaBosp) tabsHtml += '<li class="nav-item"><a class="nav-link'+(tab==='bosp'?' active':'')+'" style="cursor:pointer;border-radius:6px;font-size:13.5px;padding:6px 16px;" '+act('switchDashboardTab',['bosp'])+'>Dashboard LPJ BOSP</a></li>';
-  tabsHtml += '</ul>';
+  let tabsHtml = '<ul class="nav nav-tabs mb-3">'
+    + (bisaOps ? '<li class="nav-item"><a class="nav-link'+(tab==='ops'?' active':'')+'" style="cursor:pointer;" '+act('switchDashboardTab',['ops'])+'>Dashboard Data OPS</a></li>' : '')
+    + (bisaBosp ? '<li class="nav-item"><a class="nav-link'+(tab==='bosp'?' active':'')+'" style="cursor:pointer;" '+act('switchDashboardTab',['bosp'])+'>Dashboard LPJ BOSP</a></li>' : '')
+    + '</ul>';
 
   const isiTab = tab==='bosp' ? viewDashboardBosp() : viewDashboardOps();
   return tabsHtml + isiTab;
