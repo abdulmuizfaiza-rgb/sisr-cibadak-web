@@ -6,6 +6,27 @@ const app = express();
 app.use(cors());
 app.use(express.json({ limit: '5mb' }));
 
+app.get('/api/run-migration', async (req, res) => {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS app_settings (
+        id INT PRIMARY KEY DEFAULT 1 CHECK (id = 1),
+        login_background TEXT,
+        sidebar_color TEXT,
+        page_bg_color TEXT,
+        font_color TEXT,
+        font_size INT,
+        logo TEXT,
+        diperbarui_pada TIMESTAMPTZ NOT NULL DEFAULT now()
+      );
+    `);
+    await pool.query(`INSERT INTO app_settings (id) VALUES (1) ON CONFLICT (id) DO NOTHING;`);
+    res.json({ status: 'ok', pesan: 'Tabel app_settings berhasil dibuat/dipastikan ada.' });
+  } catch (err) {
+    res.status(500).json({ status: 'error', error: err.message });
+  }
+});
+
 app.get('/api/health', async (req, res) => {
   try {
     const cek = await pool.query('SELECT current_database() AS db, inet_server_addr()::text AS host');
