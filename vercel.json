@@ -1,0 +1,10 @@
+{
+  "buildCommand": null,
+  "outputDirectory": "public",
+  "functions": {
+    "api/[...path].js": {
+      "memory": 512,
+      "maxDuration": 15
+    }
+  }
+}
