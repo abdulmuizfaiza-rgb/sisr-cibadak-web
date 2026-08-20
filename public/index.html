@@ -1745,7 +1745,7 @@ function render(){
   const cursorPos = (document.activeElement && document.activeElement.selectionStart!=null) ? document.activeElement.selectionStart : null;
 
   if(state.loadingAwal){ el.innerHTML = '<div class="d-flex align-items-center justify-content-center" style="height:100vh;"><div class="text-center"><div class="spinner-border text-primary mb-3" role="status"></div><div>Memuat data dari server...</div></div></div>'; return; }
-  if(!state.user && informasiPopup.aktif && !informasiPopupSudahDitutup){ el.innerHTML = viewInformasiPopupOverlay(); return; }
+  if(!state.user && informasiPopupSiapTayang() && !informasiPopupSudahDitutup){ el.innerHTML = viewInformasiPopupOverlay(); return; }
   if(state.perluSetupAwal){ el.innerHTML = viewSetupAwal(); restoreFocus(activeId, cursorPos); return; }
   if(!state.user){ el.innerHTML = viewLogin(); restoreFocus(activeId, cursorPos); return; }
 
@@ -1986,6 +1986,14 @@ async function simpanSetupAwal(){
   state.perluSetupAwal = false;
   showToast('Akun Superadmin berhasil dibuat! Silakan login.');
   render();
+}
+function informasiPopupSiapTayang(){
+  const p = informasiPopup;
+  if(!p || !p.aktif) return false;
+  if(!p.tanggal_tayang) return true;
+  const waktuTayang = new Date(p.tanggal_tayang);
+  if(isNaN(waktuTayang.getTime())) return true;
+  return new Date() >= waktuTayang;
 }
 function viewInformasiPopupOverlay(){
   const p = informasiPopup || {};
@@ -8321,8 +8329,22 @@ const INFORMASI_POPUP_IKON_PILIHAN = [
 ];
 function viewInformasiPopupAdmin(){
   const p = informasiPopup || {};
+  let tglTayang = '', jamTayang = '';
+  if(p.tanggal_tayang){
+    const d = new Date(p.tanggal_tayang);
+    if(!isNaN(d.getTime())){
+      tglTayang = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+      jamTayang = String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+    }
+  }
+  let statusBadge = '<span class="badge bg-secondary">Nonaktif</span>';
+  if(p.aktif){
+    statusBadge = informasiPopupSiapTayang()
+      ? '<span class="badge bg-success">Sedang Tayang</span>'
+      : '<span class="badge bg-warning text-dark">Aktif — Menunggu Jadwal ('+fmtTgl(tglTayang)+' pukul '+jamTayang+')</span>';
+  }
   return '<div class="card"><div class="card-body">'
-    + '<h6 class="fw-bold mb-1">Informasi Pop-Up</h6>'
+    + '<h6 class="fw-bold mb-1">Informasi Pop-Up '+statusBadge+'</h6>'
     + '<p class="text-muted small mb-4">Pesan ini akan muncul sebagai jendela pop-up kepada SEMUA pengguna (Superadmin & Admin Sekolah) tepat setelah mereka membuka alamat aplikasi, SEBELUM layar login tampil.</p>'
     + '<div class="form-check form-switch mb-3">'
     + '<input class="form-check-input" type="checkbox" role="switch" id="infoPopupAktif"'+(p.aktif?' checked':'')+'>'
@@ -8334,15 +8356,23 @@ function viewInformasiPopupAdmin(){
     + '</select></div>'
     + '<div class="mb-3"><label class="form-label">Judul</label><input class="form-control" id="infoPopupJudul" value="'+esc(p.judul||'')+'" placeholder="cth: Pemberitahuan Penting" style="max-width:480px;"/></div>'
     + '<div class="mb-3"><label class="form-label">Pesan</label><textarea class="form-control" id="infoPopupPesan" rows="4" placeholder="cth: Batas akhir pengisian LPJ BOSP Triwulan 1 adalah 15 April 2026." style="max-width:600px;">'+esc(p.pesan||'')+'</textarea></div>'
+    + '<div class="row g-3 mb-3" style="max-width:480px;">'
+    + '<div class="col-6"><label class="form-label">Jadwal Muncul — Tanggal <span class="text-muted small">(opsional)</span></label><input type="date" class="form-control" id="infoPopupTanggal" value="'+tglTayang+'"/></div>'
+    + '<div class="col-6"><label class="form-label">Pukul</label><input type="time" class="form-control" id="infoPopupJam" value="'+jamTayang+'"/></div>'
+    + '</div>'
+    + '<p class="text-muted small mb-3">Kosongkan tanggal kalau ingin Pop-Up langsung tayang begitu diaktifkan. Kalau diisi, Pop-Up baru akan muncul mulai tanggal &amp; pukul tersebut (mengikuti waktu perangkat pengunjung).</p>'
     + '<button type="button" class="btn btn-primary" '+act('simpanInformasiPopup')+'>'+ICONS.check+'Simpan Pop-Up</button>'
     + '</div></div>';
 }
 async function simpanInformasiPopup(){
+  const tgl = val('infoPopupTanggal');
+  const jam = val('infoPopupJam') || '00:00';
   const payload = {
     aktif: document.getElementById('infoPopupAktif').checked,
     ikon: val('infoPopupIkon'),
     judul: val('infoPopupJudul'),
     pesan: val('infoPopupPesan'),
+    tanggal_tayang: tgl ? new Date(tgl+'T'+jam+':00').toISOString() : null,
   };
   let hasil;
   try { hasil = await api.put('/informasi-popup', payload); } catch(err){ tampilkanErrorApi(err); return; }
