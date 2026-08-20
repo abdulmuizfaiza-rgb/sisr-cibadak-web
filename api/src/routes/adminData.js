@@ -238,6 +238,42 @@ router.post('/pengaturan-tampilan/reset', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+// ============ INFORMASI POP-UP (tampil sebelum layar login) ============
+router.get('/informasi-popup', async (req, res) => {
+  try {
+    const { rows } = await pool.query('SELECT * FROM informasi_popup WHERE id = 1');
+    res.json(rows[0] || { aktif: false });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+router.put('/informasi-popup', async (req, res) => {
+  const { aktif, ikon, judul, pesan } = req.body;
+  try {
+    const { rows } = await pool.query(
+      `UPDATE informasi_popup SET aktif=$1, ikon=COALESCE($2, ikon), judul=$3, pesan=$4, diperbarui_pada=now() WHERE id=1 RETURNING *`,
+      [!!aktif, ikon || null, judul || null, pesan || null]
+    );
+    res.json(rows[0]);
+  } catch (err) { res.status(400).json({ error: err.message }); }
+});
+
+// ============ KONFIGURASI JENIS GRAFIK DASHBOARD (Superadmin) ============
+router.get('/dashboard-chart-config', async (req, res) => {
+  try {
+    const { rows } = await pool.query('SELECT dashboard_chart_config FROM app_settings WHERE id = 1');
+    res.json({ config: (rows[0] && rows[0].dashboard_chart_config) || {} });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+router.put('/dashboard-chart-config', async (req, res) => {
+  const { config } = req.body;
+  try {
+    const { rows } = await pool.query(
+      `UPDATE app_settings SET dashboard_chart_config = $1::jsonb, diperbarui_pada = now() WHERE id = 1 RETURNING dashboard_chart_config`,
+      [JSON.stringify(config || {})]
+    );
+    res.json({ config: rows[0].dashboard_chart_config });
+  } catch (err) { res.status(400).json({ error: err.message }); }
+});
+
 // ============ INFORMASI ============
 router.get('/informasi', async (req, res) => {
   try {
