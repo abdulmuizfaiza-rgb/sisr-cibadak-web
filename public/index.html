@@ -309,7 +309,7 @@ async function muatDataAwal(){
 
 
 const state = {
-  user: null, view: 'login', loginTab: 'superadmin',
+  user: null, view: 'login', loginTab: 'superadmin', dashboardTab: 'ops',
   editingSR: null, editingSekolah: null, editingOperator: null, editingSertifikasi: null, editingPtk: null,
   editing2a: null, editing2b: null, editing2c: null,
   filterSekolahOperator: '', filterSekolahPtk: '', filterSekolahSertifikasi: '',
@@ -481,8 +481,7 @@ function triwulanChildren(tw){
   ];
 }
 const MENUS = [
-  {code:'dashboard_ops', label:'Dashboard Pendataan Operator Sekolah'},
-  {code:'dashboard_bosp', label:'Dashboard LPJ BOSP'},
+  {code:'dashboard', label:'Dashboard'},
   {code:'profil_sr', label:'Profil Sub Rayon'},
   {code:'pendataan_ops', label:'Pendataan OPS', dropdown:true, children:[
     {code:'data_master', label:'Data Master', dropdown:true, children:[
@@ -773,7 +772,7 @@ async function resetPasswordDefault(username){
 function loginAs(username, userData){
   const role = userData.jabatan !== undefined ? 'admin' : 'superadmin';
   state.user = Object.assign({username: username, role: role, sub_rayon_id: userData.sub_rayon_id||null}, userData);
-  state.view = 'dashboard_ops';
+  state.view = 'dashboard';
   state.showChangePassword = !!userData.must_change_password;
   try { sessionStorage.setItem('sisrSesi', JSON.stringify({username: username, role: role})); } catch(e){ /* browser tanpa sessionStorage, abaikan */ }
   render();
@@ -1398,7 +1397,7 @@ const ACTIONS = {
   setLbpkFilterSekolah, setLbpkFilterSubRayon, setLbpkFilterKecamatan,
   editPenerimaanBosp, cancelPenerimaanBosp, toggleAksiPenerimaanBosp, isiPenerimaanBospSekolah, savePenerimaanBospClick, hapusPenerimaanBosp,
   formatText2, setFontSizeSurat, insertTabSurat, insertTableSurat, insertLinkSurat, insertTextBoxSurat, insertShapeSurat, insertImageSurat,
-  simpanPengaturanTampilan, resetPengaturanTampilan,
+  simpanPengaturanTampilan, resetPengaturanTampilan, switchDashboardTab,
 };
 
 document.addEventListener('DOMContentLoaded', setupDelegation);
@@ -1677,7 +1676,7 @@ function setupDelegation(){
 // RENDER
 // ============================================================
 function topLevelMenuForView(view){
-  if(view==='dashboard_ops' || view==='dashboard_bosp') return view;
+  if(view==='dashboard') return 'dashboard';
   if(view==='profil_sr') return 'profil_sr';
   if(['data_sekolah','data_operator','data_ptk','data_sertifikasi'].indexOf(view)>-1) return 'data_master';
   if(/^(lampiran_2[abc]_tw[1-4]|surat_rekom2a_tw[1-4]|surat_penghentian_tw[1-4]|surat_pernyataan_tw[1-4])$/.test(view)) return 'pemberkasan_tpg';
@@ -1744,12 +1743,12 @@ function render(){
 
   // Penjagaan akses: kalau belum ganti password, paksa ke Dashboard.
   const uAccountGuard = getUserRecord(state.user.username);
-  if(uAccountGuard && uAccountGuard.mustChangePassword && state.view !== 'dashboard_ops'){ state.view = 'dashboard_ops'; }
+  if(uAccountGuard && uAccountGuard.mustChangePassword && state.view !== 'dashboard'){ state.view = 'dashboard'; }
   // Penjagaan akses: menu superadminOnly tidak boleh diakses Admin SR; menu yang dinonaktifkan Superadmin juga tidak boleh.
   const menuGroupForGuard = topLevelMenuForView(state.view);
   const menuDefForGuard = MENUS.find(function(m){ return m.code === menuGroupForGuard; });
-  if(menuDefForGuard && menuDefForGuard.superadminOnly && state.user.role!=='superadmin' && menuGroupForGuard!=='menu_pengguna'){ state.view = 'dashboard_ops'; }
-  if(state.user.role==='admin_sr' && menuGroupForGuard!=='dashboard_ops' && menuGroupForGuard!=='dashboard_bosp' && currentAdminMenuAccess()[menuGroupForGuard]!==true){ state.view = 'dashboard_ops'; }
+  if(menuDefForGuard && menuDefForGuard.superadminOnly && state.user.role!=='superadmin' && menuGroupForGuard!=='menu_pengguna'){ state.view = 'dashboard'; }
+  if(state.user.role==='admin_sr' && menuGroupForGuard!=='dashboard' && currentAdminMenuAccess()[menuGroupForGuard]!==true){ state.view = 'dashboard'; }
 
   let body = '';
   const twMatch = /^lampiran_(2[abc])_tw([1-4])$/.exec(state.view);
@@ -1757,8 +1756,7 @@ function render(){
   const penghentianMatch = /^surat_penghentian_tw([1-4])$/.exec(state.view);
   const pernyataanMatch = /^surat_pernyataan_tw([1-4])$/.exec(state.view);
   const bospMatch = /^bosp_(.+)_tw([1-4])$/.exec(state.view);
-  if(state.view==='dashboard_ops') body = viewDashboardOps();
-  else if(state.view==='dashboard_bosp') body = viewDashboardBosp();
+  if(state.view==='dashboard') body = viewDashboard();
   else if(state.view==='profil_sr') body = viewProfilSR();
   else if(state.view==='data_sekolah') body = viewDataSekolah();
   else if(state.view==='data_operator') body = viewDataOperator();
@@ -1849,7 +1847,7 @@ function layout(body){
   const uAccountForMenu = getUserRecord(state.user.username);
   const belumGantiPassword = uAccountForMenu && uAccountForMenu.mustChangePassword;
   function filterMenuForRole(node){
-    if(belumGantiPassword) return node.code==='dashboard_ops' ? node : null;
+    if(belumGantiPassword) return node.code==='dashboard' ? node : null;
     if(node.superadminOnly && state.user.role!=='superadmin') return null;
     if(state.user.role==='admin_sr' && ADMIN_MENU_TOGGLE_LABELS.hasOwnProperty(node.code)){
       if(currentAdminMenuAccess()[node.code] !== true) return null;
@@ -2118,6 +2116,32 @@ function bospTriwulanTable(entries){
     + '</tbody></table></div>';
 }
 
+// ============================================================
+// VIEW: DASHBOARD (gabungan, 2 tab: Data OPS & LPJ BOSP)
+// ============================================================
+function viewDashboard(){
+  const isSuperadmin = state.user.role === 'superadmin';
+  const akses = isSuperadmin ? {dashboard_ops: true, dashboard_bosp: true} : currentAdminMenuAccess();
+  const bisaOps = akses.dashboard_ops === true;
+  const bisaBosp = akses.dashboard_bosp === true;
+  if(!bisaOps && !bisaBosp){
+    return '<div class="card"><div class="card-body text-muted">Anda tidak memiliki akses ke dashboard manapun. Hubungi Superadmin untuk mengatur akses menu Anda.</div></div>';
+  }
+  // Kalau tab yang sedang aktif ternyata tidak diizinkan untuk role ini, otomatis pindah ke tab yang diizinkan.
+  let tab = state.dashboardTab;
+  if(tab==='ops' && !bisaOps) tab = 'bosp';
+  if(tab==='bosp' && !bisaBosp) tab = 'ops';
+  if(tab !== state.dashboardTab) state.dashboardTab = tab;
+
+  let tabsHtml = '<ul class="nav nav-pills mb-3" style="background:#f2f4f7;border-radius:8px;padding:4px;display:inline-flex;">';
+  if(bisaOps) tabsHtml += '<li class="nav-item"><a class="nav-link'+(tab==='ops'?' active':'')+'" style="cursor:pointer;border-radius:6px;font-size:13.5px;padding:6px 16px;" '+act('switchDashboardTab',['ops'])+'>Dashboard Data OPS</a></li>';
+  if(bisaBosp) tabsHtml += '<li class="nav-item"><a class="nav-link'+(tab==='bosp'?' active':'')+'" style="cursor:pointer;border-radius:6px;font-size:13.5px;padding:6px 16px;" '+act('switchDashboardTab',['bosp'])+'>Dashboard LPJ BOSP</a></li>';
+  tabsHtml += '</ul>';
+
+  const isiTab = tab==='bosp' ? viewDashboardBosp() : viewDashboardOps();
+  return tabsHtml + isiTab;
+}
+function switchDashboardTab(tab){ state.dashboardTab = tab; render(); }
 function viewDashboardOps(){
   const sekolah = scopedSekolah();
   const ptk = scopedPtk();
@@ -3597,8 +3621,8 @@ function viewBackupRestore(){
 }
 
 const ADMIN_MENU_TOGGLE_LABELS = {
-  dashboard_ops: 'Dashboard Pendataan Operator Sekolah',
-  dashboard_bosp: 'Dashboard LPJ BOSP',
+  dashboard_ops: 'Dashboard - Tab Data OPS',
+  dashboard_bosp: 'Dashboard - Tab LPJ BOSP',
   profil_sr: 'Profil Sub Rayon',
   data_master: 'Data Master (Sekolah, Operator, PTK, Sertifikasi)',
   pemberkasan_tpg: 'Pemberkasan TPG PTK (Triwulan 1-4)',
