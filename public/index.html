@@ -193,16 +193,39 @@ function subRayonIdWajib(){
   throw new Error('Belum ada data Sub Rayon. Silakan buat data di menu "Profil Sub Rayon" terlebih dahulu.');
 }
 
-// Memuat SEMUA data dari database sungguhan saat aplikasi pertama dibuka,
-// mengisi array cache lokal (subRayons, sekolahList, dst.) supaya seluruh
-// kode render yang sudah ada bisa tetap bekerja synchronous seperti biasa.
-async function muatDataAwal(){
-  const [subRayonData, sekolahData, operatorData, ptkData, sertifikasiData, penerimaanBospData, bospEntriesData, lamp2aData, lamp2bData, lamp2cData, bkuData, saldo1, saldo2, saldo3, saldo4, laporanBpkData, stockOpnameData, pajakData, trashData, informasiData, userManualData, formatSuratData, superadminData, adminData] = await Promise.all([
+// Data ESENSIAL: wajib dimuat SEBELUM Dashboard ditampilkan (blocking, tapi jauh lebih sedikit
+// permintaan dibanding sebelumnya supaya loading setelah klik Login jauh lebih cepat).
+async function muatDataEsensial(){
+  const [subRayonData, sekolahData, operatorData, ptkData, sertifikasiData, informasiData, superadminData, adminData] = await Promise.all([
     api.get('/sub-rayon'),
     api.get('/sekolah'),
     api.get('/operator'),
     api.get('/ptk'),
     api.get('/sertifikasi'),
+    api.get('/informasi'),
+    api.get('/akun/superadmin'),
+    api.get('/akun/admin'),
+  ]);
+  replaceArray(subRayons, subRayonData.map(function(sr){
+    return Object.assign({}, sr, {nama_kecamatan: (sr.daftar_kecamatan||[]).join(', ')});
+  }));
+  replaceArray(sekolahList, sekolahData);
+  replaceArray(operatorList, operatorData);
+  replaceArray(ptkList, ptkData);
+  replaceArray(sertifikasiList, sertifikasiData.map(function(s){ return Object.assign({}, s, {nama_ptk: s.nama_ptk_live || ''}); }));
+  replaceArray(informasiList, informasiData.map(function(x){ return Object.assign({}, x, {tujuanJabatan: x.tujuan_jabatan||[]}); }));
+  replaceArray(superadminAccounts, superadminData.map(function(a){
+    return Object.assign({}, a, {mustChangePassword: a.must_change_password});
+  }));
+  replaceArray(adminAccounts, adminData.map(function(a){
+    const sr = subRayons.find(function(s){return s.nama_sub_rayon===a.nama_sub_rayon;});
+    return Object.assign({}, a, {mustChangePassword: a.must_change_password, sub_rayon_id: sr?sr.id:null, level_akses: a.level_admin});
+  }));
+}
+// Data LANJUTAN: dipakai di menu-menu selain Dashboard (LPJ BOSP, BKU, Pajak, Stock Opname, dst).
+// Dimuat di LATAR BELAKANG setelah Dashboard sudah tampil, supaya pengguna tidak menunggu lama.
+async function muatDataLanjutan(){
+  const [penerimaanBospData, bospEntriesData, lamp2aData, lamp2bData, lamp2cData, bkuData, saldo1, saldo2, saldo3, saldo4, laporanBpkData, stockOpnameData, pajakData, trashData, userManualData, formatSuratData] = await Promise.all([
     api.get('/penerimaan-bosp?tahun_anggaran='+encodeURIComponent(state.tahunAnggaran)),
     api.get('/bosp-entries?tahun_anggaran='+encodeURIComponent(state.tahunAnggaran)),
     api.get('/lampiran-2a?tahun_anggaran='+encodeURIComponent(state.tahunAnggaran)),
@@ -217,19 +240,9 @@ async function muatDataAwal(){
     api.get('/stock-opname?tahun_anggaran='+encodeURIComponent(state.tahunAnggaran)),
     api.get('/pajak?tahun_anggaran='+encodeURIComponent(state.tahunAnggaran)+'&input_by='+encodeURIComponent(state.user.username)),
     api.get('/trash'),
-    api.get('/informasi'),
     api.get('/user-manual'),
     api.get('/format-surat/'+encodeURIComponent(state.tahunAnggaran)),
-    api.get('/akun/superadmin'),
-    api.get('/akun/admin'),
   ]);
-  replaceArray(subRayons, subRayonData.map(function(sr){
-    return Object.assign({}, sr, {nama_kecamatan: (sr.daftar_kecamatan||[]).join(', ')});
-  }));
-  replaceArray(sekolahList, sekolahData);
-  replaceArray(operatorList, operatorData);
-  replaceArray(ptkList, ptkData);
-  replaceArray(sertifikasiList, sertifikasiData.map(function(s){ return Object.assign({}, s, {nama_ptk: s.nama_ptk_live || ''}); }));
   replaceArray(penerimaanBospList, penerimaanBospData.map(function(pb){
     const tahap1 = parseFloat(pb.tahap1)||0, tahap2 = parseFloat(pb.tahap2)||0;
     const tunai1 = parseFloat(pb.tunai1)||0, tunai2 = parseFloat(pb.tunai2)||0, tunai3 = parseFloat(pb.tunai3)||0, tunai4 = parseFloat(pb.tunai4)||0;
@@ -288,7 +301,6 @@ async function muatDataAwal(){
     return {id: t.id, sourceType: t.source_type, label: t.label, data: t.data_json, sub_rayon_id: t.sub_rayon_id,
       deletedAt: t.deleted_at?t.deleted_at.slice(0,10):'', reason: t.reason, permanent: t.permanent};
   }));
-  replaceArray(informasiList, informasiData.map(function(x){ return Object.assign({}, x, {tujuanJabatan: x.tujuan_jabatan||[]}); }));
   replaceArray(userManuals, userManualData);
   Object.keys(state.formatSuratInfo||{}).forEach(function(k){ delete state.formatSuratInfo[k]; });
   Object.assign(state.formatSuratInfo, formatSuratData.file_docx_map||{});
@@ -296,13 +308,14 @@ async function muatDataAwal(){
   Object.assign(state.nomorSuratMap, formatSuratData.nomor_surat_map||{});
   Object.keys(state.editedSuratMap||{}).forEach(function(k){ delete state.editedSuratMap[k]; });
   Object.assign(state.editedSuratMap, formatSuratData.edited_surat_map||{});
-  replaceArray(superadminAccounts, superadminData.map(function(a){
-    return Object.assign({}, a, {mustChangePassword: a.must_change_password});
-  }));
-  replaceArray(adminAccounts, adminData.map(function(a){
-    const sr = subRayons.find(function(s){return s.nama_sub_rayon===a.nama_sub_rayon;});
-    return Object.assign({}, a, {mustChangePassword: a.must_change_password, sub_rayon_id: sr?sr.id:null, level_akses: a.level_admin});
-  }));
+}
+// Dipanggil setelah login/pemulihan sesi: muat esensial (blocking), lalu lanjutan di latar belakang
+// TANPA memblokir tampilan Dashboard yang sudah bisa dilihat pengguna lebih dulu.
+async function muatDataAwal(){
+  await muatDataEsensial();
+  muatDataLanjutan().then(function(){ render(); }).catch(function(err){
+    console.error('Gagal memuat data lanjutan (BKU/Pajak/Stock Opname/dll):', err);
+  });
 }
 
 
@@ -679,7 +692,7 @@ function searchPtkForLampiran(q, statusFilter, excludeNrgs){
   }).slice(0,6);
 }
 
-function showToast(msg){ state.toast = msg; render(); setTimeout(function(){ state.toast=null; render(); }, 2500); }
+function showToast(msg){ state.toast = msg; render(); setTimeout(function(){ state.toast=null; renderPertahankanForm(); }, 2500); }
 
 // ============================================================
 // ACTIONS (dipanggil lewat event delegation, bukan onclick inline)
