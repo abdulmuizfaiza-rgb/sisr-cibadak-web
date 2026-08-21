@@ -628,7 +628,7 @@ const ICONS = {
   info: svg('<circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>'),
 };
 
-function scopedSekolah(){ return state.user.role==='superadmin' ? sekolahList : sekolahList.filter(function(s){return s.input_by===state.user.username;}); }
+function scopedSekolah(){ return state.user.role==='superadmin' ? sekolahList : sekolahList.filter(function(s){return s.npsn===state.user.npsn;}); }
 // Khusus dipakai untuk dropdown REFERENSI ke sekolah di menu LAIN (Operator, PTK, Penerimaan BOSP, dst).
 // Sekolah yang datanya belum lengkap (NPSN/Nama/Status/Alamat) belum benar-benar tersimpan ke database,
 // jadi TIDAK BOLEH muncul sebagai pilihan di sini -- kalau dipilih akan gagal (error kunci asing/foreign key)
@@ -640,10 +640,14 @@ function ptkTersimpanSaja(){ return scopedPtk().filter(function(p){ return !p._b
 function operatorTersimpanSaja(){ return scopedOperator().filter(function(o){ return !o._belumTersimpan; }); }
 function isHistoricalView(){ return !!(state.viewingYear && state.viewingYear !== state.tahunAnggaran); }
 function activePtkSource(){ return isHistoricalView() && ptkArchiveByYear[state.viewingYear] ? ptkArchiveByYear[state.viewingYear] : ptkList; }
-function scopedPtk(){ const src = activePtkSource(); return state.user.role==='superadmin' ? src : src.filter(function(p){return p.input_by===state.user.username;}); }
+function scopedPtk(){ const src = activePtkSource(); return state.user.role==='superadmin' ? src : src.filter(function(p){return p.unit_kerja===state.user.npsn;}); }
 function scopedSubRayon(){ return state.user.role==='superadmin' ? subRayons : subRayons.filter(function(s){return s.id===state.user.sub_rayon_id;}); }
-function scopedOperator(){ return state.user.role==='superadmin' ? operatorList : operatorList.filter(function(o){return o.input_by===state.user.username;}); }
-function scopedSertifikasi(){ return state.user.role==='superadmin' ? sertifikasiList : sertifikasiList.filter(function(s){return s.input_by===state.user.username;}); }
+function scopedOperator(){ return state.user.role==='superadmin' ? operatorList : operatorList.filter(function(o){return o.unit_kerja===state.user.npsn;}); }
+function scopedSertifikasi(){
+  if(state.user.role==='superadmin') return sertifikasiList;
+  const nrgSekolahIni = ptkList.filter(function(p){return p.unit_kerja===state.user.npsn;}).map(function(p){return p.nrg;});
+  return sertifikasiList.filter(function(s){return nrgSekolahIni.indexOf(s.ptk_nrg)!==-1;});
+}
 
 function imageUploadField(label, fileKey, currentValue, required){
   const preview = tempFiles[fileKey] || currentValue;
@@ -817,7 +821,7 @@ async function resetPasswordDefault(username){
   render();
 }
 function loginAs(username, userData){
-  const role = userData.jabatan !== undefined ? 'admin' : 'superadmin';
+  const role = userData.jabatan !== undefined ? 'admin_sr' : 'superadmin';
   state.user = Object.assign({username: username, role: role, sub_rayon_id: userData.sub_rayon_id||null}, userData);
   state.view = 'dashboard';
   state.showChangePassword = !!userData.must_change_password;
@@ -3910,6 +3914,15 @@ function toggleAdminMenuAccess(jabatan, code){
   if(!adminMenuAccessByJabatan[jabatan]) return;
   adminMenuAccessByJabatan[jabatan][code] = !adminMenuAccessByJabatan[jabatan][code];
   render();
+  simpanAksesMenuAdminKeServer();
+}
+let _simpanAksesMenuTimer = null;
+function simpanAksesMenuAdminKeServer(){
+  clearTimeout(_simpanAksesMenuTimer);
+  _simpanAksesMenuTimer = setTimeout(async function(){
+    try { await api.put('/akses-menu-admin', { akses: adminMenuAccessByJabatan }); }
+    catch(err){ showToast('Gagal menyimpan pengaturan akses menu ke server. Coba klik ceklist lagi.'); }
+  }, 400);
 }
 function setKelolaAksesJabatanTab(jabatan){ state.kelolaAksesJabatanTab = jabatan; render(); }
 
@@ -9150,6 +9163,7 @@ function pilihFileRestore(){
 function batalRestore(){ state.confirmingRestore = false; state.restorePendingData = null; state.restorePendingFilename = ''; render(); }
 
 function replaceArray(arr, newArr){ arr.length = 0; (newArr||[]).forEach(function(x){ arr.push(x); }); }
+function replaceObject(obj, newObj){ Object.keys(obj).forEach(function(k){ delete obj[k]; }); Object.assign(obj, newObj||{}); }
 function konfirmasiRestoreClick(){
   const d = state.restorePendingData;
   if(!d) return;
@@ -9510,6 +9524,12 @@ async function mulaiAplikasi(){
     try { applyAppSettings(await api.get('/pengaturan-tampilan')); } catch(e){ /* pengaturan gagal dimuat -- lanjut pakai tampilan bawaan */ }
     try { informasiPopup = await api.get('/informasi-popup'); } catch(e){ /* gagal dimuat -- popup tidak ditampilkan, bukan alasan menghalangi akses */ }
     try { const cfg = await api.get('/dashboard-chart-config'); dashboardChartConfig = (cfg && cfg.config) || {}; } catch(e){ /* pakai tabel bawaan kalau gagal dimuat */ }
+    try {
+      const aksesTersimpan = await api.get('/akses-menu-admin');
+      if(aksesTersimpan && aksesTersimpan.akses && Object.keys(aksesTersimpan.akses).length > 0){
+        replaceObject(adminMenuAccessByJabatan, aksesTersimpan.akses);
+      }
+    } catch(e){ /* gagal dimuat -- pakai nilai bawaan di kode, jangan halangi akses */ }
   } catch(err){
     // Backend/database belum siap (biasanya hanya sesaat setelah aplikasi baru dibuka) -- coba lagi sebentar.
     el.innerHTML = '<div class="d-flex align-items-center justify-content-center" style="height:100vh;"><div class="text-center"><div class="spinner-border text-primary mb-3" role="status"></div><div>Menunggu database siap...</div></div></div>';
