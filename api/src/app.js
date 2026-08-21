@@ -8,6 +8,7 @@ app.use(express.json({ limit: '5mb' }));
 
 app.get('/api/run-migration', async (req, res) => {
   try {
+    await pool.query(`ALTER TABLE admin_account ADD COLUMN IF NOT EXISTS npsn TEXT REFERENCES sekolah(npsn) ON UPDATE CASCADE;`);
     await pool.query(`
       CREATE TABLE IF NOT EXISTS app_settings (
         id INT PRIMARY KEY DEFAULT 1 CHECK (id = 1),
