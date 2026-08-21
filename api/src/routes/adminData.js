@@ -274,6 +274,24 @@ router.put('/dashboard-chart-config', async (req, res) => {
   } catch (err) { res.status(400).json({ error: err.message }); }
 });
 
+// ============ AKSES MENU ADMIN (per Jabatan) -- diatur Superadmin, dipatuhi seluruh Admin Sekolah ============
+router.get('/akses-menu-admin', async (req, res) => {
+  try {
+    const { rows } = await pool.query('SELECT akses_menu_admin FROM app_settings WHERE id = 1');
+    res.json({ akses: (rows[0] && rows[0].akses_menu_admin) || {} });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+router.put('/akses-menu-admin', async (req, res) => {
+  const { akses } = req.body;
+  try {
+    const { rows } = await pool.query(
+      `UPDATE app_settings SET akses_menu_admin = $1::jsonb, diperbarui_pada = now() WHERE id = 1 RETURNING akses_menu_admin`,
+      [JSON.stringify(akses || {})]
+    );
+    res.json({ akses: rows[0].akses_menu_admin });
+  } catch (err) { res.status(400).json({ error: err.message }); }
+});
+
 // ============ INFORMASI ============
 router.get('/informasi', async (req, res) => {
   try {
