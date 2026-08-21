@@ -308,9 +308,12 @@ async function muatDataLanjutan(){
   replaceArray(laporanBpkList, (function(){
     const hasil = [];
     laporanBpkData.forEach(function(lb){
+      const sk = sekolahList.find(function(s){return s.npsn===lb.npsn;});
+      const sr = sk ? subRayons.find(function(x){return x.id===sk.sub_rayon_id;}) : null;
       for(let tw=1; tw<=4; tw++){
         hasil.push({
-          id: nextLaporanBpkId++, npsn: lb.npsn, nama_sekolah: lb.nama_sekolah||'', kode_upb: '', kecamatan: '', sub_rayon: '',
+          id: nextLaporanBpkId++, npsn: lb.npsn, nama_sekolah: lb.nama_sekolah||(sk?sk.nama_sekolah:''), kode_upb: '',
+          kecamatan: sk ? (sk.kecamatan||'') : '', sub_rayon: sr ? sr.nama_sub_rayon : '',
           saldo_rekening_bank: parseFloat(lb['saldo_bank_tw'+tw])||0, saldo_kas_tunai: parseFloat(lb['saldo_tunai_tw'+tw])||0,
           triwulan: tw, sub_rayon_id: lb.sub_rayon_id, input_by: lb.input_by,
         });
@@ -377,6 +380,7 @@ const state = {
   importValidationErrors: null,
   importGagalRincian: null,
   regSekolahDitemukan: null,
+  validasiAngkaPopup: null,
   pajakZoom: 100,
   pajakMismatchPopup: null,
   exportValidationErrors: null,
@@ -640,13 +644,17 @@ function ptkTersimpanSaja(){ return scopedPtk().filter(function(p){ return !p._b
 function operatorTersimpanSaja(){ return scopedOperator().filter(function(o){ return !o._belumTersimpan; }); }
 function isHistoricalView(){ return !!(state.viewingYear && state.viewingYear !== state.tahunAnggaran); }
 function activePtkSource(){ return isHistoricalView() && ptkArchiveByYear[state.viewingYear] ? ptkArchiveByYear[state.viewingYear] : ptkList; }
-function scopedPtk(){ const src = activePtkSource(); return state.user.role==='superadmin' ? src : src.filter(function(p){return p.unit_kerja===state.user.npsn;}); }
+function scopedPtk(){
+  const src = activePtkSource();
+  if(state.user.role==='superadmin') return src;
+  return src.filter(function(p){return p.unit_kerja===state.user.npsn || (p._belumTersimpan && p.input_by===state.user.username);});
+}
 function scopedSubRayon(){ return state.user.role==='superadmin' ? subRayons : subRayons.filter(function(s){return s.id===state.user.sub_rayon_id;}); }
 function scopedOperator(){ return state.user.role==='superadmin' ? operatorList : operatorList.filter(function(o){return o.unit_kerja===state.user.npsn;}); }
 function scopedSertifikasi(){
   if(state.user.role==='superadmin') return sertifikasiList;
   const nrgSekolahIni = ptkList.filter(function(p){return p.unit_kerja===state.user.npsn;}).map(function(p){return p.nrg;});
-  return sertifikasiList.filter(function(s){return nrgSekolahIni.indexOf(s.ptk_nrg)!==-1;});
+  return sertifikasiList.filter(function(s){return nrgSekolahIni.indexOf(s.ptk_nrg)!==-1 || s.input_by===state.user.username;});
 }
 
 function imageUploadField(label, fileKey, currentValue, required){
@@ -775,7 +783,7 @@ async function handleLoginClick(expectedRole){
   const tahunInput = document.getElementById('loginTahun');
   const selectedYear = tahunInput ? tahunInput.value : state.tahunAnggaran;
   state.viewingYear = (selectedYear !== state.tahunAnggaran) ? selectedYear : null;
-  const role = userData.jabatan !== undefined ? 'admin' : 'superadmin';
+  const role = userData.jabatan !== undefined ? 'admin_sr' : 'superadmin';
   state.user = Object.assign({username: username, role: role, sub_rayon_id: userData.sub_rayon_id||null}, userData);
   state.loadingAwal = true;
   render();
@@ -1462,7 +1470,7 @@ const ACTIONS = {
   editPenerimaanBosp, cancelPenerimaanBosp, toggleAksiPenerimaanBosp, isiPenerimaanBospSekolah, savePenerimaanBospClick, hapusPenerimaanBosp,
   formatText2, setFontSizeSurat, insertTabSurat, insertTableSurat, insertLinkSurat, insertTextBoxSurat, insertShapeSurat, insertImageSurat,
   simpanPengaturanTampilan, resetPengaturanTampilan, switchDashboardTab,
-  switchInformasiTab, simpanInformasiPopup, tutupInformasiPopup, tutupImportGagalPopup,
+  switchInformasiTab, simpanInformasiPopup, tutupInformasiPopup, tutupImportGagalPopup, tutupRegHasilPopup, tutupValidasiAngkaPopup,
 };
 
 document.addEventListener('DOMContentLoaded', setupDelegation);
@@ -1474,6 +1482,8 @@ function setupDelegation(){
   app.dataset.delegated = '1';
 
   app.addEventListener('click', function(e){
+    const elPilihIkonPopup = e.target.closest('[data-pilih-ikon-popup]');
+    if(elPilihIkonPopup){ pilihIkonPopup(elPilihIkonPopup.dataset.pilihIkonPopup); return; }
     const elPilihSekolah = e.target.closest('[data-npsn-pilih]');
     if(elPilihSekolah){ pilihSekolahRegistrasi(elPilihSekolah.dataset.npsnPilih, elPilihSekolah.dataset.namaPilih); return; }
     const el = e.target.closest('[data-action]');
@@ -1797,7 +1807,7 @@ function render(){
   if(state.loadingAwal){ el.innerHTML = '<div class="d-flex align-items-center justify-content-center" style="height:100vh;"><div class="text-center"><div class="spinner-border text-primary mb-3" role="status"></div><div>Memuat data dari server...</div></div></div>'; return; }
   if(!state.user && informasiPopupSiapTayang() && !informasiPopupSudahDitutup){ el.innerHTML = viewInformasiPopupOverlay(); return; }
   if(state.perluSetupAwal){ el.innerHTML = viewSetupAwal(); restoreFocus(activeId, cursorPos); return; }
-  if(!state.user){ el.innerHTML = viewLogin(); restoreFocus(activeId, cursorPos); return; }
+  if(!state.user){ el.innerHTML = viewLogin() + (state.regHasilPopup ? viewRegHasilPopup() : ''); restoreFocus(activeId, cursorPos); return; }
 
   // Penjagaan akses: kalau belum ganti password, paksa ke Dashboard.
   const uAccountGuard = getUserRecord(state.user.username);
@@ -1921,7 +1931,8 @@ function layout(body){
   const menuHtml = MENUS.map(filterMenuForRole).filter(Boolean).map(function(m){ return renderMenuNode(m, 1); }).join('');
 
 
-  const userLabel = state.user.role==='superadmin' ? 'Super Admin Dinas' : 'Admin '+subRayons.find(function(s){return s.id===state.user.sub_rayon_id;}).nama_sub_rayon;
+  const srUserLabel = subRayons.find(function(s){return s.id===state.user.sub_rayon_id;});
+  const userLabel = state.user.role==='superadmin' ? 'Super Admin Dinas' : 'Admin '+(srUserLabel?srUserLabel.nama_sub_rayon:'');
   const initials = state.user.nama.split(' ').slice(0,2).map(function(w){return w[0];}).join('').toUpperCase();
   const toastHtml = state.toast ? '<div class="alert alert-success py-2 px-3" style="font-size:13.5px;">'+esc(state.toast)+'</div>' : '';
   const sidebarSR = state.user.sub_rayon_id ? subRayons.find(function(sr){return sr.id===state.user.sub_rayon_id;}) : subRayons[0];
@@ -1961,6 +1972,7 @@ function layout(body){
     + ((uAccount && uAccount.mustChangePassword && state.showChangePassword) ? viewGantiPasswordPopup() : '')
     + (state.importValidationErrors ? viewImportValidationPopup() : '')
     + (state.importGagalRincian ? viewImportGagalPopup() : '')
+    + (state.validasiAngkaPopup ? viewValidasiAngkaPopup() : '')
     + (state.pajakMismatchPopup ? viewPajakMismatchPopup() : '')
     + (state.exportValidationErrors ? viewExportValidationPopup() : '')
     + (state.stockOpnamePasteWarning ? viewStockOpnamePasteWarningPopup() : '')
@@ -2048,10 +2060,10 @@ function informasiPopupSiapTayang(){
 }
 function viewInformasiPopupOverlay(){
   const p = informasiPopup || {};
-  const ikonHtml = ICONS[p.ikon] || ICONS.info || ICONS.gear;
+  const ikonHtml = INFORMASI_POPUP_IKON_SVG[p.ikon] || INFORMASI_POPUP_IKON_SVG.info;
   return '<div class="modal-backdrop-custom">'
     + '<div class="modal-card-custom" style="max-width:440px;text-align:center;">'
-    + '<div style="font-size:40px;color:var(--primary);margin-bottom:12px;">'+ikonHtml+'</div>'
+    + '<div style="margin-bottom:12px;">'+ikonHtml+'</div>'
     + '<h5 class="fw-bold mb-2">'+esc(p.judul||'Pemberitahuan')+'</h5>'
     + '<p class="text-muted" style="white-space:pre-line;">'+esc(p.pesan||'')+'</p>'
     + '<button type="button" class="btn btn-primary w-100 mt-2" '+act('tutupInformasiPopup')+'>Mengerti, Lanjutkan</button>'
@@ -3049,10 +3061,10 @@ function tableWrap(headers, rows, zoomKey, pdfActionName){
     const zoom = state[zoomKey] || 100;
     toolbar = '<div class="d-flex align-items-center gap-2 mb-2 flex-wrap">'
       + (pdfActionName ? '<button class="btn btn-outline-danger btn-sm" '+act(pdfActionName)+'>'+'Unduh PDF</button>' : '')
-      + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('genericZoomOut',[zoomKey])+'><img src="'+ZOOM_OUT_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Zoom Out"/> Zoom Out</button>'
+      + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('genericZoomOut',[zoomKey])+'>Zoom Out</button>'
       + '<span class="text-muted small">'+zoom+'%</span>'
-      + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('genericZoomIn',[zoomKey])+'><img src="'+ZOOM_IN_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Zoom In"/> Zoom In</button>'
-      + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('genericZoomReset',[zoomKey])+'><img src="'+RESET_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Reset"/>Reset</button>'
+      + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('genericZoomIn',[zoomKey])+'>Zoom In</button>'
+      + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('genericZoomReset',[zoomKey])+'>Reset</button>'
       + '</div>';
   }
   const zoomStyle = zoomKey ? ' style="zoom:'+(state[zoomKey]||100)+'%;"' : '';
@@ -3103,7 +3115,7 @@ function viewLampiran2a(tw){
     const p = state.selectedPtk2a;
     const excludeNrgs2a = filtered.map(function(d){return d.nrg;});
     formHtml = copyBtn('2a', tw)
-      + '<button type="button" class="btn btn-outline-success btn-sm mb-3" '+act('exportLampiran2aExcel',[tw])+'>'+'<img src="'+EXPORT_EXCEL_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Export Excel"/>Export Excel</button>'
+      + '<button type="button" class="btn btn-outline-success btn-sm mb-3" '+act('exportLampiran2aExcel',[tw])+'>'+'Export Excel</button>'
       + '<div class="card mb-3" style="max-width:750px;"><div class="card-body">'
       + '<label class="form-label fw-bold">Cari Nama PTK</label>'
       + '<small class="text-muted d-block mb-2">Hanya menampilkan PTK berstatus Aktif yang belum tersimpan pada Triwulan ini.</small>'
@@ -3154,7 +3166,7 @@ function viewLampiran2b(tw){
     const p = state.selectedPtk2b;
     const excludeNrgs2b = filtered.map(function(d){return d.nrg;});
     formHtml = copyBtn('2b', tw)
-      + '<button type="button" class="btn btn-outline-success btn-sm mb-3" '+act('exportLampiran2bExcel',[tw])+'>'+'<img src="'+EXPORT_EXCEL_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Export Excel"/>Export Excel</button>'
+      + '<button type="button" class="btn btn-outline-success btn-sm mb-3" '+act('exportLampiran2bExcel',[tw])+'>'+'Export Excel</button>'
       + '<div class="card mb-3" style="max-width:750px;"><div class="card-body">'
       + '<label class="form-label fw-bold">Cari Nama PTK</label>'
       + '<small class="text-muted d-block mb-2">Hanya menampilkan PTK berstatus Tidak Aktif yang belum tersimpan pada Triwulan ini.</small>'
@@ -3211,7 +3223,7 @@ function viewLampiran2c(tw){
     const p = state.selectedPtk2c;
     const excludeNrgs2c = filtered.map(function(d){return d.nrg;});
     formHtml = copyBtn('2c', tw)
-      + '<button type="button" class="btn btn-outline-success btn-sm mb-3" '+act('exportLampiran2cExcel',[tw])+'>'+'<img src="'+EXPORT_EXCEL_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Export Excel"/>Export Excel</button>'
+      + '<button type="button" class="btn btn-outline-success btn-sm mb-3" '+act('exportLampiran2cExcel',[tw])+'>'+'Export Excel</button>'
       + '<div class="card mb-3" style="max-width:800px;"><div class="card-body">'
       + '<label class="form-label fw-bold">Cari Nama PTK</label>'
       + '<small class="text-muted d-block mb-2">Hanya menampilkan PTK berstatus Aktif yang belum tersimpan pada Triwulan ini.</small>'
@@ -3832,10 +3844,10 @@ function viewHapusData(){
   html += '<div class="d-flex align-items-center gap-2 mb-2 flex-wrap">'
     + '<button class="btn btn-outline-success btn-sm" '+act('unduhHapusDataExcel')+'>'+'Unduh Excel</button>'
     + '<button class="btn btn-outline-danger btn-sm" '+act('unduhHapusDataPdf')+'>'+'Unduh PDF</button>'
-    + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('genericZoomOut',['zoomHapusData'])+'><img src="'+ZOOM_OUT_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Zoom Out"/> Zoom Out</button>'
+    + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('genericZoomOut',['zoomHapusData'])+'>Zoom Out</button>'
     + '<span class="text-muted small">'+zoomTrash+'%</span>'
-    + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('genericZoomIn',['zoomHapusData'])+'><img src="'+ZOOM_IN_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Zoom In"/> Zoom In</button>'
-    + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('genericZoomReset',['zoomHapusData'])+'><img src="'+RESET_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Reset"/>Reset</button>'
+    + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('genericZoomIn',['zoomHapusData'])+'>Zoom In</button>'
+    + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('genericZoomReset',['zoomHapusData'])+'>Reset</button>'
     + '</div>';
 
   html += '<div class="card"><div class="card-body"><div class="table-responsive table-scroll" style="zoom:'+zoomTrash+'%;"><table class="table table-hover align-middle">'
@@ -4111,13 +4123,15 @@ async function simpanRegistrasi(){
   } catch(e){ showToast('Gagal memeriksa data ke server, silakan coba lagi.'); return; }
   const jabatanSudahAda = daftarAdmin.some(function(a){ return a.npsn===npsn && a.jabatan===jabatan; });
   if(jabatanSudahAda){
-    showToast('Jabatan "'+jabatan+'" untuk sekolah dengan NPSN '+npsn+' sudah terdaftar oleh Admin lain. Hubungi Superadmin untuk reset atau perubahan data.');
+    state.regHasilPopup = { tipe: 'gagal', judul: 'Registrasi Tidak Bisa Dilanjutkan', pesan: 'Jabatan "'+jabatan+'" untuk sekolah dengan NPSN '+npsn+' SUDAH TERDAFTAR oleh Admin lain sebelumnya. Satu jabatan hanya boleh didaftarkan sekali per sekolah. Kalau ini keliru, hubungi Superadmin Dinas untuk pengecekan/reset akun.' };
+    render();
     return;
   }
   // Cegah operator dengan nama & unit kerja yang SAMA PERSIS tercatat dobel (misal akibat klik ganda sebelumnya).
   const operatorSudahAda = daftarOperatorSekolahIni.some(function(o){ return o.unit_kerja===npsn && o.nama_ops.trim().toLowerCase()===namaOperator.toLowerCase() && o.jabatan===jabatan; });
   if(operatorSudahAda){
-    showToast('Data Operator dengan nama & jabatan yang sama untuk sekolah ini sudah ada. Kalau ini bukan Anda yang menambahkan, hubungi Superadmin.');
+    state.regHasilPopup = { tipe: 'gagal', judul: 'Registrasi Tidak Bisa Dilanjutkan', pesan: 'Data dengan nama & jabatan yang sama untuk sekolah ini SUDAH TERDAFTAR sebelumnya (kemungkinan dari percobaan registrasi Anda yang lain). Registrasi ini tidak disimpan lagi supaya tidak dobel. Kalau ini keliru, hubungi Superadmin Dinas.' };
+    render();
     return;
   }
 
@@ -4136,7 +4150,7 @@ async function simpanRegistrasi(){
 
   state.showRegistrasi = false;
   state.regSekolahDitemukan = null;
-  showToast('Registrasi berhasil! Operator "'+namaOperator+'" ('+jabatan+') untuk sekolah "'+sk.nama_sekolah+'" dan akun Admin ("'+username+'") sudah tersimpan. Silakan login.');
+  state.regHasilPopup = { tipe: 'sukses', judul: 'Registrasi Berhasil!', pesan: 'Operator "'+namaOperator+'" ('+jabatan+') untuk sekolah "'+sk.nama_sekolah+'" dan akun Admin ("'+username+'") sudah tersimpan ke database. Silakan login memakai Username dan Password yang baru saja Anda buat.' };
   render();
 
   } finally {
@@ -4233,8 +4247,8 @@ function viewAksesAdminTab(){
   let html = '<div class="mb-3 d-flex gap-2">'
     + '<button class="btn btn-primary" '+act('editAdminAccount',['new'])+'>'+'Tambah Admin</button>'
     + '<button class="btn btn-outline-warning" '+act('bukaRegistrasi')+'>'+'Registrasi Sekolah &amp; Admin Baru</button>'
-    + '<button class="btn btn-outline-success" '+act('exportAdminAccountsExcel')+'>'+'<img src="'+EXPORT_EXCEL_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Export Excel"/>Export Excel</button>'
-    + '<button class="btn btn-outline-secondary" '+act('notifExportImport')+'>'+'<img src="'+IMPORT_EXCEL_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Import Excel"/>Import Excel</button>'
+    + '<button class="btn btn-outline-success" '+act('exportAdminAccountsExcel')+'>'+'Export Excel</button>'
+    + '<button class="btn btn-outline-secondary" '+act('notifExportImport')+'>'+'Import Excel</button>'
     + '</div>';
 
   if(state.showRegistrasi){ html += viewRegistrasiForm(); }
@@ -5076,13 +5090,38 @@ function tempelDataOpsInline(source, startIdStr, field, lines){
   else if(source==='sekolah') tempelDataSekolahInline(startIdStr, field, lines);
   else if(source==='operator') tempelDataOperatorInline(startIdStr, field, lines);
 }
+const LABEL_FIELD_ANGKA = {nrg:'NRG', nuptk:'NUPTK', nik:'NIK', nip:'NIP', gaji_pokok:'Gaji Pokok'};
 function simpanOpsInlineSel(key, rawValue){
   const parts = key.split(':');
   const source = parts[0], id = parts[1], field = parts.slice(2).join(':');
+  if(LABEL_FIELD_ANGKA.hasOwnProperty(field) && rawValue!==null && rawValue!==undefined && String(rawValue).trim()!==''){
+    const bersih = String(rawValue).replace(/[.,\s]/g,''); // izinkan titik/koma pemisah ribuan khusus utk Gaji
+    if(!/^[0-9]+$/.test(bersih)){
+      state.validasiAngkaPopup = { label: LABEL_FIELD_ANGKA[field], nilaiSalah: rawValue };
+      render(); // render ULANG PENUH -- otomatis kembalikan tampilan field ke nilai lama (data belum berubah)
+      return;
+    }
+  }
+  if(field==='tanggal_lahir' && rawValue && String(rawValue).trim()!=='' && !/^\d{4}-\d{2}-\d{2}$/.test(String(rawValue).trim())){
+    state.validasiAngkaPopup = { label: 'Tanggal Lahir', nilaiSalah: rawValue };
+    render();
+    return;
+  }
   if(source==='ptk') simpanPtkInlineSel(parseInt(id,10), field, rawValue);
   else if(source==='sertifikasi') simpanSertifikasiInlineSel(parseInt(id,10), field, rawValue);
   else if(source==='sekolah') simpanSekolahInlineSel(id, field, rawValue);
   else if(source==='operator') simpanOperatorInlineSel(parseInt(id,10), field, rawValue);
+}
+function tutupValidasiAngkaPopup(){ state.validasiAngkaPopup = null; render(); }
+function viewValidasiAngkaPopup(){
+  const p = state.validasiAngkaPopup;
+  return '<div class="modal-backdrop-custom"><div class="modal-card-custom" style="max-width:420px;text-align:center;">'
+    + '<div style="font-size:36px;margin-bottom:8px;">⚠️</div>'
+    + '<h5 class="fw-bold mb-2" style="color:#e03131;">Data Tidak Valid</h5>'
+    + '<p class="text-muted">Kolom <b>'+esc(p.label)+'</b> hanya boleh diisi ANGKA'+(p.label==='Tanggal Lahir'?' (format tanggal yang benar)':'')+'. Anda mengetik: <span class="text-danger">"'+esc(String(p.nilaiSalah))+'"</span></p>'
+    + '<p class="text-muted small">Data TIDAK disimpan. Silakan perbaiki isian kolom tersebut.</p>'
+    + '<button type="button" class="btn btn-danger w-100 mt-2" '+act('tutupValidasiAngkaPopup')+'>Mengerti, Saya Akan Perbaiki</button>'
+    + '</div></div>';
 }
 function opsInlineTextCell(source, id, field, value, width, maxLength){
   return '<td><input type="text" class="form-control form-control-sm ops-inline-paste-cell" style="min-width:'+(width||100)+'px;"'+(maxLength?' maxlength="'+maxLength+'"':'')+' value="'+esc(value||'')+'" data-change-action="simpanOpsInlineSel" data-change-arg="'+source+':'+id+':'+field+'" data-paste-source="'+source+'" data-paste-field="'+field+'" data-paste-row-id="'+id+'"/></td>';
@@ -5155,14 +5194,14 @@ function viewDataSertifikasiInline(){
   const ptkScoped = ptkTersimpanSaja();
   let html = '<div class="mb-3 d-flex align-items-center gap-2 flex-wrap">'
     + '<button class="btn btn-primary" '+act('tambahBarisSertifikasi')+'>'+'Tambah Baris</button>'
-    + '<button class="btn btn-outline-success" '+act('notifExportImport')+'>'+'<img src="'+EXPORT_EXCEL_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Export Excel"/>Export Excel</button>'
-    + '<button class="btn btn-outline-secondary" '+act('notifExportImport')+'>'+'<img src="'+IMPORT_EXCEL_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Import Excel"/>Import Excel</button>'
+    + '<button class="btn btn-outline-success" '+act('notifExportImport')+'>'+'Export Excel</button>'
+    + '<button class="btn btn-outline-secondary" '+act('notifExportImport')+'>'+'Import Excel</button>'
     + '<button class="btn btn-outline-success" '+act('unduhDataSertifikasiExcel')+'>'+'Unduh Excel</button>'
     + '<button class="btn btn-outline-danger" '+act('unduhDataSertifikasiPdf')+'>'+'Unduh PDF</button>'
-    + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('dataSertifikasiZoomOut')+'><img src="'+ZOOM_OUT_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Zoom Out"/> Zoom Out</button>'
+    + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('dataSertifikasiZoomOut')+'>Zoom Out</button>'
     + '<span class="text-muted small">'+zoomSert+'%</span>'
-    + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('dataSertifikasiZoomIn')+'><img src="'+ZOOM_IN_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Zoom In"/> Zoom In</button>'
-    + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('dataSertifikasiZoomReset')+'><img src="'+RESET_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Reset"/>Reset</button>'
+    + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('dataSertifikasiZoomIn')+'>Zoom In</button>'
+    + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('dataSertifikasiZoomReset')+'>Reset</button>'
     + '</div>';
   function sekolahOfSert(rec){ const ptk = ptkList.find(function(p){return p.nrg===rec.ptk_nrg;}); return ptk ? ptk.unit_kerja : null; }
   const list2 = list.slice().sort(function(a,b){return namaSekolah(sekolahOfSert(a)).localeCompare(namaSekolah(sekolahOfSert(b)));});
@@ -5197,7 +5236,7 @@ function tambahBarisPtk(){
   const rec = {nrg:'', _belumTersimpan: true, nuptk:'', nik:'', nama_ptk:'', jenis_kelamin:'', tempat_lahir:'', tanggal_lahir:'', nip:'', status_kepegawaian:'', nama_jabatan:'',
     status_ptk_dapodik:'', pangkat:'-', golongan:'-', gaji_pokok:0, status_ptk:'', tmt_mengajar:'', tmt_sekolah_induk:'', mata_pelajaran_diampu:'',
     jumlah_jam_mengajar:0, npwp:'', jenjang_pendidikan:'', jurusan_pendidikan_terakhir:'', tahun_lulus:'', status_keaktifan:'', alasan_tidak_aktif:'', jabatan_tugas_tambahan:'Tidak Ada',
-    unit_kerja:'', sub_rayon_id: subRayonIdWajib(), input_by: state.user.username};
+    unit_kerja: state.user.role==='admin_sr' ? (state.user.npsn||'') : '', sub_rayon_id: subRayonIdWajib(), input_by: state.user.username};
   ptkRowId(rec);
   ptkList.push(rec);
   render();
@@ -5281,14 +5320,14 @@ function viewDataPtkInline(){
   const zoomPtk = state.dataPtkZoom || 100;
   html += '<div class="mb-3 d-flex align-items-center gap-2 flex-wrap">'
     + '<button class="btn btn-primary" '+act('tambahBarisPtk')+' '+(historical?'disabled':'')+'>'+'Tambah Baris</button>'
-    + '<button class="btn btn-outline-success" '+act('notifExportImport')+'>'+'<img src="'+EXPORT_EXCEL_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Export Excel"/>Export Excel</button>'
-    + '<button class="btn btn-outline-secondary" '+act('notifExportImport')+'>'+'<img src="'+IMPORT_EXCEL_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Import Excel"/>Import Excel</button>'
+    + '<button class="btn btn-outline-success" '+act('notifExportImport')+'>'+'Export Excel</button>'
+    + '<button class="btn btn-outline-secondary" '+act('notifExportImport')+'>'+'Import Excel</button>'
     + '<button class="btn btn-outline-success" '+act('unduhDataPtkExcel')+'>'+'Unduh Excel</button>'
     + '<button class="btn btn-outline-danger" '+act('unduhDataPtkPdf')+'>'+'Unduh PDF</button>'
-    + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('dataPtkZoomOut')+'><img src="'+ZOOM_OUT_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Zoom Out"/> Zoom Out</button>'
+    + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('dataPtkZoomOut')+'>Zoom Out</button>'
     + '<span class="text-muted small">'+zoomPtk+'%</span>'
-    + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('dataPtkZoomIn')+'><img src="'+ZOOM_IN_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Zoom In"/> Zoom In</button>'
-    + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('dataPtkZoomReset')+'><img src="'+RESET_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Reset"/>Reset</button>'
+    + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('dataPtkZoomIn')+'>Zoom In</button>'
+    + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('dataPtkZoomReset')+'>Reset</button>'
     + '</div>';
   html += filterSekolahBox('filterSekolahPtk');
   let filteredList = listPtkTertampil();
@@ -5563,8 +5602,8 @@ function viewDataSekolahInline(){
   const zoomSk = state.dataSekolahZoom || 100;
   let html = '<div class="mb-3 d-flex align-items-center gap-2 flex-wrap">'
     + '<button class="btn btn-primary" '+act('tambahBarisSekolah')+'>'+'Tambah Baris</button>'
-    + '<button class="btn btn-outline-success" '+act('exportDataSekolahExcel')+'>'+'<img src="'+EXPORT_EXCEL_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Export Excel"/>Export Excel</button>'
-    + '<button class="btn btn-outline-secondary" '+act('importDataSekolahClick')+'>'+'<img src="'+IMPORT_EXCEL_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Import Excel"/>Import Excel</button>'
+    + '<button class="btn btn-outline-success" '+act('exportDataSekolahExcel')+'>'+'Export Excel</button>'
+    + '<button class="btn btn-outline-secondary" '+act('importDataSekolahClick')+'>'+'Import Excel</button>'
     + '<button class="btn btn-outline-dark" '+act('cetakDataSekolah')+'>'+'Cetak (Sesuai Filter)</button>'
     + '<select class="form-select form-select-sm" style="max-width:180px;" data-change-action="setDataSekolahFilterNama"><option value="">Semua Nama Sekolah</option>'
     + list.map(function(s){return '<option value="'+esc(s.nama_sekolah)+'"'+(s.nama_sekolah===(state.dataSekolahFilterNama||'')?' selected':'')+'>'+esc(s.nama_sekolah)+'</option>';}).join('')
@@ -5576,10 +5615,10 @@ function viewDataSekolahInline(){
     + '<select class="form-select form-select-sm" style="max-width:160px;" data-change-action="setDataSekolahFilterKecamatan"><option value="">Semua Kecamatan</option>'
     + KECAMATAN_OPTIONS.map(function(k){return '<option value="'+esc(k)+'"'+(k===(state.dataSekolahFilterKecamatan||'')?' selected':'')+'>'+esc(k)+'</option>';}).join('')
     + '</select>'
-    + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('dataSekolahZoomOut')+'>'+'<img src="'+ZOOM_OUT_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Zoom Out"/> Zoom Out</button>'
+    + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('dataSekolahZoomOut')+'>'+' Zoom Out</button>'
     + '<span class="text-muted small">'+zoomSk+'%</span>'
-    + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('dataSekolahZoomIn')+'>'+'<img src="'+ZOOM_IN_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Zoom In"/> Zoom In</button>'
-    + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('dataSekolahZoomReset')+'><img src="'+RESET_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Reset"/>Reset</button>'
+    + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('dataSekolahZoomIn')+'>'+' Zoom In</button>'
+    + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('dataSekolahZoomReset')+'>Reset</button>'
     + '</div>';
   const statusOptionsHtml = '<option value="">-- Pilih --</option><option>Negeri</option><option>Swasta</option>';
   html += '<div class="card"><div class="card-body"><div class="table-responsive" style="overflow-x:auto;overflow-y:auto;max-height:480px;zoom:'+zoomSk+'%;"><table class="table table-hover align-middle" style="min-width:1700px;">'
@@ -5701,14 +5740,14 @@ function viewDataOperatorInline(){
   let html = '<h6 class="fw-bold text-center mb-3">DATA OPERATOR SEKOLAH / BENDAHARA / ADMIN BOSP — '+esc(namaSubRayonUser().toUpperCase())+'</h6>';
   html += '<div class="mb-3 d-flex align-items-center gap-2 flex-wrap">'
     + '<button class="btn btn-primary" '+act('tambahBarisOperator')+'>'+'Tambah Baris</button>'
-    + '<button class="btn btn-outline-success" '+act('exportDataOperatorExcel')+'>'+'<img src="'+EXPORT_EXCEL_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Export Excel"/>Export Excel</button>'
-    + '<button class="btn btn-outline-secondary" '+act('importDataOperatorClick')+'>'+'<img src="'+IMPORT_EXCEL_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Import Excel"/>Import Excel</button>'
+    + '<button class="btn btn-outline-success" '+act('exportDataOperatorExcel')+'>'+'Export Excel</button>'
+    + '<button class="btn btn-outline-secondary" '+act('importDataOperatorClick')+'>'+'Import Excel</button>'
     + '<button class="btn btn-outline-success" '+act('unduhDataOperatorExcel')+'>'+'Unduh Excel</button>'
     + '<button class="btn btn-outline-danger" '+act('unduhDataOperatorPdf')+'>'+'Unduh PDF</button>'
-    + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('dataOperatorZoomOut')+'><img src="'+ZOOM_OUT_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Zoom Out"/> Zoom Out</button>'
+    + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('dataOperatorZoomOut')+'>Zoom Out</button>'
     + '<span class="text-muted small">'+zoomOp+'%</span>'
-    + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('dataOperatorZoomIn')+'><img src="'+ZOOM_IN_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Zoom In"/> Zoom In</button>'
-    + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('dataOperatorZoomReset')+'><img src="'+RESET_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Reset"/>Reset</button>'
+    + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('dataOperatorZoomIn')+'>Zoom In</button>'
+    + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('dataOperatorZoomReset')+'>Reset</button>'
     + '</div>';
   html += filterSekolahBox('filterSekolahOperator');
   let filteredList = listOperatorTertampil();
@@ -5819,15 +5858,15 @@ function viewPenerimaanBosp(){
   const zoomPb = state.lpjBospZoom || 100;
   const filterValPb = state.lpjBospFilterSekolah || '';
   let html = '<div class="d-flex justify-content-end align-items-center gap-2 mb-2 flex-wrap">'
-    + '<button type="button" class="btn btn-outline-success btn-sm" '+act('exportPenerimaanBospExcel')+'>'+'<img src="'+EXPORT_EXCEL_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Export Excel"/>Export Excel</button>'
-    + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('importPenerimaanBospClick')+'>'+'<img src="'+IMPORT_EXCEL_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Import Excel"/>Import Excel</button>'
+    + '<button type="button" class="btn btn-outline-success btn-sm" '+act('exportPenerimaanBospExcel')+'>'+'Export Excel</button>'
+    + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('importPenerimaanBospClick')+'>'+'Import Excel</button>'
     + '<select class="form-select form-select-sm" style="max-width:220px;" data-change-action="setLpjBospFilterSekolah"><option value="">Semua Sekolah</option>'
     + daftarNamaSekolahUntukFilter().map(function(nm){ return '<option value="'+esc(nm)+'"'+(nm===filterValPb?' selected':'')+'>'+esc(nm)+'</option>'; }).join('')
     + '</select>'
-    + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('lpjBospZoomOut')+'>'+'<img src="'+ZOOM_OUT_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Zoom Out"/> Zoom Out</button>'
+    + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('lpjBospZoomOut')+'>'+' Zoom Out</button>'
     + '<span class="text-muted small">'+zoomPb+'%</span>'
-    + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('lpjBospZoomIn')+'>'+'<img src="'+ZOOM_IN_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Zoom In"/> Zoom In</button>'
-    + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('lpjBospZoomReset')+'><img src="'+RESET_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Reset"/>Reset</button>'
+    + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('lpjBospZoomIn')+'>'+' Zoom In</button>'
+    + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('lpjBospZoomReset')+'>Reset</button>'
     + '</div>'
     + '<div class="mb-3"><button class="btn btn-primary" '+act('editPenerimaanBosp',['new'])+'>'+'Tambah Penerimaan BOSP</button></div>'
   html += '<div class="card"><div class="card-body"><div class="table-responsive table-scroll" style="zoom:'+(state.lpjBospZoom||100)+'%;"><table class="table table-hover align-middle bosp-table">'
@@ -6178,7 +6217,7 @@ function laporanBpkRowHtml(x, tw, no){
 
 function daftarKecamatanUntukFilter(){
   const set = {};
-  penerimaanBospList.forEach(function(p){ if(p.kecamatan) set[p.kecamatan]=true; });
+  laporanBpkList.forEach(function(x){ if(x.kecamatan) set[x.kecamatan]=true; });
   return Object.keys(set).sort();
 }
 function setLbpkFilterSekolah(v){ state.lbpkFilterSekolah = v; render(); }
@@ -7502,6 +7541,17 @@ function viewImportValidationPopup(){
     + '</div></div>';
 }
 
+function tutupRegHasilPopup(){ state.regHasilPopup = null; render(); }
+function viewRegHasilPopup(){
+  const p = state.regHasilPopup;
+  const sukses = p.tipe === 'sukses';
+  return '<div class="modal-backdrop-custom"><div class="modal-card-custom" style="max-width:440px;text-align:center;">'
+    + '<div style="font-size:40px;margin-bottom:8px;">'+(sukses?'✅':'⚠️')+'</div>'
+    + '<h5 class="fw-bold mb-2" style="color:'+(sukses?'#2f9e44':'#e03131')+';">'+esc(p.judul)+'</h5>'
+    + '<p class="text-muted" style="white-space:pre-line;">'+esc(p.pesan)+'</p>'
+    + '<button type="button" class="btn '+(sukses?'btn-success':'btn-danger')+' w-100 mt-2" '+act('tutupRegHasilPopup')+'>Mengerti</button>'
+    + '</div></div>';
+}
 function tutupImportGagalPopup(){ state.importGagalRincian = null; render(); }
 function viewImportGagalPopup(){
   const daftar = state.importGagalRincian || [];
@@ -7665,16 +7715,16 @@ function lpjBospToolbarHtml(){
     + '<select class="form-select form-select-sm" style="max-width:220px;" data-change-action="setLpjBospFilterSekolah"><option value="">Semua Sekolah</option>'
     + daftarNamaSekolahUntukFilter().map(function(nm){ return '<option value="'+esc(nm)+'"'+(nm===filterVal?' selected':'')+'>'+esc(nm)+'</option>'; }).join('')
     + '</select>'
-    + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('lpjBospZoomOut')+'>'+'<img src="'+ZOOM_OUT_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Zoom Out"/> Zoom Out</button>'
+    + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('lpjBospZoomOut')+'>'+' Zoom Out</button>'
     + '<span class="text-muted small">'+zoom+'%</span>'
-    + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('lpjBospZoomIn')+'>'+'<img src="'+ZOOM_IN_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Zoom In"/> Zoom In</button>'
-    + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('lpjBospZoomReset')+'><img src="'+RESET_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Reset"/>Reset</button>'
+    + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('lpjBospZoomIn')+'>'+' Zoom In</button>'
+    + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('lpjBospZoomReset')+'>Reset</button>'
     + '</div>';
 }
 function exportImportButtonsHtml(kode, tw){
   return lpjBospToolbarHtml()
-    + '<div class="mb-3 d-inline-block me-2"><button type="button" class="btn btn-outline-success btn-sm" '+act('exportBospKategoriClick',[kode, tw])+'>'+'<img src="'+EXPORT_EXCEL_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Export Excel"/>Export Excel</button> '
-    + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('importBospKategoriClick',[kode, tw])+'><img src="'+IMPORT_EXCEL_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Import Excel"/>Import Excel</button></div>';
+    + '<div class="mb-3 d-inline-block me-2"><button type="button" class="btn btn-outline-success btn-sm" '+act('exportBospKategoriClick',[kode, tw])+'>'+'Export Excel</button> '
+    + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('importBospKategoriClick',[kode, tw])+'>Import Excel</button></div>';
 }
 
 // ============================================================
@@ -8515,11 +8565,22 @@ function viewInformasiAdmin(){
 }
 function switchInformasiTab(tab){ state.informasiTab = tab; render(); }
 
+// Ikon BERWARNA & modern khusus Informasi Pop-Up (beda dari ICONS biasa yang monokrom/garis).
+const INFORMASI_POPUP_IKON_SVG = {
+  info: '<svg viewBox="0 0 64 64" width="56" height="56"><defs><linearGradient id="gInfo" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#4dabf7"/><stop offset="100%" stop-color="#206bc4"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="url(#gInfo)"/><circle cx="32" cy="20" r="4.2" fill="#fff"/><rect x="27.5" y="28" width="9" height="22" rx="4" fill="#fff"/></svg>',
+  pengumuman: '<svg viewBox="0 0 64 64" width="56" height="56"><defs><linearGradient id="gPengumuman" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#ff922b"/><stop offset="100%" stop-color="#e8590c"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="url(#gPengumuman)"/><path d="M18 28v10a3 3 0 0 0 3 3h2l3 9h5l-2.5-9H33l14 7V21l-14 7H21a3 3 0 0 0-3 3z" fill="#fff"/></svg>',
+  peringatan: '<svg viewBox="0 0 64 64" width="56" height="56"><defs><linearGradient id="gPeringatan" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#ffd43b"/><stop offset="100%" stop-color="#f59f00"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="url(#gPeringatan)"/><rect x="28.2" y="16" width="7.6" height="24" rx="3.5" fill="#fff"/><circle cx="32" cy="46" r="4.4" fill="#fff"/></svg>',
+  sukses: '<svg viewBox="0 0 64 64" width="56" height="56"><defs><linearGradient id="gSukses" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#69db7c"/><stop offset="100%" stop-color="#2f9e44"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="url(#gSukses)"/><path d="M20 33l8 8 16-17" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>',
+  jadwal: '<svg viewBox="0 0 64 64" width="56" height="56"><defs><linearGradient id="gJadwal" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#ff8787"/><stop offset="100%" stop-color="#e03131"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="url(#gJadwal)"/><rect x="16" y="19" width="32" height="27" rx="4" fill="#fff"/><rect x="16" y="19" width="32" height="8" rx="4" fill="#c92a2a"/><rect x="22" y="14" width="4" height="9" rx="2" fill="#c92a2a"/><rect x="38" y="14" width="4" height="9" rx="2" fill="#c92a2a"/><text x="32" y="41" font-size="13" font-weight="700" text-anchor="middle" fill="#c92a2a" font-family="sans-serif">!</text></svg>',
+  lonceng: '<svg viewBox="0 0 64 64" width="56" height="56"><defs><linearGradient id="gLonceng" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#da77f2"/><stop offset="100%" stop-color="#9c36b5"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="url(#gLonceng)"/><path d="M32 15c-6.5 0-10 5.2-10 12v6l-4 6h28l-4-6v-6c0-6.8-3.5-12-10-12z" fill="#fff"/><circle cx="32" cy="47" r="4" fill="#fff"/></svg>',
+};
 const INFORMASI_POPUP_IKON_PILIHAN = [
-  {key:'info', label:'Info (lingkaran i)'},
-  {key:'gear', label:'Gerigi/Pengaturan'},
-  {key:'check', label:'Centang'},
-  {key:'cap', label:'Topi Wisuda'},
+  {key:'info', label:'Informasi (Biru)'},
+  {key:'pengumuman', label:'Pengumuman (Oranye)'},
+  {key:'peringatan', label:'Peringatan (Kuning)'},
+  {key:'sukses', label:'Sukses/Selesai (Hijau)'},
+  {key:'jadwal', label:'Batas Waktu/Jadwal (Merah)'},
+  {key:'lonceng', label:'Notifikasi (Ungu)'},
 ];
 function viewInformasiPopupAdmin(){
   const p = informasiPopup || {};
@@ -8545,9 +8606,16 @@ function viewInformasiPopupAdmin(){
     + '<label class="form-check-label" for="infoPopupAktif">Aktifkan Pop-Up</label>'
     + '</div>'
     + '<div class="mb-3"><label class="form-label">Ikon</label>'
-    + '<select class="form-select" id="infoPopupIkon" style="max-width:320px;">'
-    + INFORMASI_POPUP_IKON_PILIHAN.map(function(o){ return '<option value="'+o.key+'"'+(p.ikon===o.key?' selected':'')+'>'+o.label+'</option>'; }).join('')
-    + '</select></div>'
+    + '<input type="hidden" id="infoPopupIkon" value="'+esc(p.ikon||'info')+'"/>'
+    + '<div class="d-flex gap-3 flex-wrap" id="infoPopupIkonGaleri">'
+    + INFORMASI_POPUP_IKON_PILIHAN.map(function(o){
+        const aktif = (p.ikon||'info')===o.key;
+        return '<div data-pilih-ikon-popup="'+o.key+'" style="cursor:pointer;text-align:center;padding:8px;border-radius:10px;border:2px solid '+(aktif?'var(--primary)':'transparent')+';background:'+(aktif?'var(--primary-light)':'transparent')+';width:96px;">'
+          + INFORMASI_POPUP_IKON_SVG[o.key]
+          + '<div class="small mt-1" style="font-size:10.5px;line-height:1.2;">'+o.label+'</div>'
+          + '</div>';
+      }).join('')
+    + '</div></div>'
     + '<div class="mb-3"><label class="form-label">Judul</label><input class="form-control" id="infoPopupJudul" value="'+esc(p.judul||'')+'" placeholder="cth: Pemberitahuan Penting" style="max-width:480px;"/></div>'
     + '<div class="mb-3"><label class="form-label">Pesan</label><textarea class="form-control" id="infoPopupPesan" rows="4" placeholder="cth: Batas akhir pengisian LPJ BOSP Triwulan 1 adalah 15 April 2026." style="max-width:600px;">'+esc(p.pesan||'')+'</textarea></div>'
     + '<div class="row g-3 mb-3" style="max-width:480px;">'
@@ -8557,6 +8625,15 @@ function viewInformasiPopupAdmin(){
     + '<p class="text-muted small mb-3">Kosongkan tanggal kalau ingin Pop-Up langsung tayang begitu diaktifkan. Kalau diisi, Pop-Up baru akan muncul mulai tanggal &amp; pukul tersebut (mengikuti waktu perangkat pengunjung).</p>'
     + '<button type="button" class="btn btn-primary" '+act('simpanInformasiPopup')+'>'+'Simpan Pop-Up</button>'
     + '</div></div>';
+}
+function pilihIkonPopup(key){
+  const hiddenEl = document.getElementById('infoPopupIkon');
+  if(hiddenEl) hiddenEl.value = key;
+  document.querySelectorAll('[data-pilih-ikon-popup]').forEach(function(el){
+    const aktif = el.dataset.pilihIkonPopup === key;
+    el.style.border = aktif ? '2px solid var(--primary)' : '2px solid transparent';
+    el.style.background = aktif ? 'var(--primary-light)' : 'transparent';
+  });
 }
 async function simpanInformasiPopup(){
   const tgl = val('infoPopupTanggal');
@@ -8718,10 +8795,10 @@ function viewPajakLpjBosp(){
   const zoom = state.pajakZoom || 100;
 
   let html = '<div class="d-flex justify-content-end align-items-center gap-2 mb-2 flex-wrap">'
-    + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('pajakZoomOut')+'>'+'<img src="'+ZOOM_OUT_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Zoom Out"/> Zoom Out</button>'
+    + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('pajakZoomOut')+'>'+' Zoom Out</button>'
     + '<span class="text-muted small">'+zoom+'%</span>'
-    + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('pajakZoomIn')+'>'+'<img src="'+ZOOM_IN_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Zoom In"/> Zoom In</button>'
-    + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('pajakZoomReset')+'><img src="'+RESET_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Reset"/>Reset</button>'
+    + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('pajakZoomIn')+'>'+' Zoom In</button>'
+    + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('pajakZoomReset')+'>Reset</button>'
     + '<button type="button" class="btn btn-outline-success btn-sm ms-2" '+act('unduhPajakExcel')+'>'+'Unduh Excel</button>'
     + '<button type="button" class="btn btn-outline-danger btn-sm" '+act('unduhPajakPdf')+'>'+'Unduh PDF</button>'
     + '</div>';
@@ -8913,12 +8990,12 @@ function viewStockOpname(){
   const zoom = stockOpnameZoom;
 
   let html = '<div class="d-flex justify-content-end align-items-center gap-2 mb-2 flex-wrap">'
-    + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('stockOpnameZoomOut')+'>'+'<img src="'+ZOOM_OUT_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Zoom Out"/> Zoom Out</button>'
+    + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('stockOpnameZoomOut')+'>'+' Zoom Out</button>'
     + '<span class="text-muted small">'+zoom+'%</span>'
-    + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('stockOpnameZoomIn')+'>'+'<img src="'+ZOOM_IN_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Zoom In"/> Zoom In</button>'
-    + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('stockOpnameZoomReset')+'><img src="'+RESET_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Reset"/>Reset</button>'
-    + '<button type="button" class="btn btn-outline-success btn-sm ms-2" '+act('exportStockOpnameExcel')+'>'+'<img src="'+EXPORT_EXCEL_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Export Excel"/>Export Excel</button>'
-    + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('importStockOpnameClick')+'>'+'<img src="'+IMPORT_EXCEL_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Import Excel"/>Import Excel</button>'
+    + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('stockOpnameZoomIn')+'>'+' Zoom In</button>'
+    + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('stockOpnameZoomReset')+'>Reset</button>'
+    + '<button type="button" class="btn btn-outline-success btn-sm ms-2" '+act('exportStockOpnameExcel')+'>'+'Export Excel</button>'
+    + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('importStockOpnameClick')+'>'+'Import Excel</button>'
     + '<button type="button" class="btn btn-outline-success btn-sm ms-2" '+act('unduhStockOpnameExcel')+'>'+'Unduh Excel</button>'
     + '<button type="button" class="btn btn-outline-danger btn-sm" '+act('unduhStockOpnamePdf')+'>'+'Unduh PDF</button>'
     + '</div>';
