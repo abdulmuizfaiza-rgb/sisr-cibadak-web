@@ -50,11 +50,19 @@ router.post('/', async (req, res) => {
 router.patch('/:npsn', async (req, res) => {
   const kolomDiizinkan = ['npsn','nama_sekolah','status_sekolah','sub_rayon_id','kecamatan','alamat_sekolah',
     'nama_pengawas_pembina','nip_pengawas_pembina','nama_kepala_sekolah','nip_kepala_sekolah',
-    'nama_pemda','website_sekolah','email_sekolah'];
+    'nama_pemda','website_sekolah','email_sekolah','logo_sekolah','logo_pemda'];
+  // Field yang WAJIB diisi (tidak boleh dikonversi jadi null meski kosong) -- selebihnya opsional.
+  const kolomWajib = ['npsn','nama_sekolah','status_sekolah'];
   const updates = Object.keys(req.body).filter(k => kolomDiizinkan.includes(k));
   if (updates.length === 0) return res.status(400).json({ error: 'Tidak ada field valid untuk diperbarui.' });
   const setClause = updates.map((k, i) => `${k} = $${i + 1}`).join(', ');
-  const values = updates.map(k => req.body[k]);
+  const values = updates.map(k => {
+    const v = req.body[k];
+    // Konsisten dengan route POST: string kosong pada field opsional dianggap "tidak diisi" (NULL),
+    // supaya tidak melanggar CHECK constraint (misal NIP harus 18 digit / '-' / NULL, bukan '').
+    if (!kolomWajib.includes(k) && (v === '' || v === undefined)) return null;
+    return v;
+  });
   values.push(req.params.npsn);
   try {
     const { rows } = await pool.query(`UPDATE sekolah SET ${setClause} WHERE npsn = $${values.length} RETURNING *`, values);
