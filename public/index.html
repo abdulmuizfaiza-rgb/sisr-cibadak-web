@@ -878,21 +878,6 @@ function cancelSekolah(){ tempFiles = {}; state.editingSekolah = null; render();
 async function saveSekolahClick(){
   const logoSekolah = tempFiles.logo_sekolah;
   const logoPemda = tempFiles.logo_pemda;
-  if(state.editingSekolah && state.editingSekolah!=='new'){
-    if(!logoSekolah && !logoPemda){ state.editingSekolah = null; tempFiles = {}; render(); return; }
-    try {
-      await api.patch('/sekolah/'+state.editingSekolah, Object.assign({}, logoSekolah?{logo_sekolah:logoSekolah}:{}, logoPemda?{logo_pemda:logoPemda}:{}));
-    } catch(err){ tampilkanErrorApi(err); return; }
-    const sk = sekolahList.find(function(s){return s.npsn===state.editingSekolah;});
-    if(logoSekolah) sk.logo_sekolah = logoSekolah;
-    if(logoPemda) sk.logo_pemda = logoPemda;
-    showToast('Logo berhasil disimpan.');
-    state.editingSekolah = null;
-    tempFiles = {};
-    render();
-    return;
-  }
-  const npsn = val('skNpsn').trim();
   const nama = val('skNamaSekolah').trim();
   const status = val('skStatus');
   const alamat = val('skAlamatSekolah').trim();
@@ -903,6 +888,27 @@ async function saveSekolahClick(){
   const namaPemda = val('skNamaPemda').trim();
   const website = val('skWebsite').trim();
   const email = val('skEmail').trim();
+  if(state.editingSekolah && state.editingSekolah!=='new'){
+    if(!nama || !status || !alamat){ showToast('Nama Sekolah, Status, dan Alamat Sekolah wajib diisi.'); return; }
+    if(nama.length > 25){ showToast('Nama Sekolah maksimal 25 karakter.'); return; }
+    if(alamat.length > 100){ showToast('Alamat Sekolah maksimal 100 karakter.'); return; }
+    const kecamatanEl = document.getElementById('skKecamatan');
+    const dataUpdate = {nama_sekolah: nama, status_sekolah: status, alamat_sekolah: alamat, nama_pengawas_pembina: namaPengawas, nip_pengawas_pembina: nipPengawas, nama_kepala_sekolah: namaKepsek, nip_kepala_sekolah: nipKepsek, nama_pemda: namaPemda, website_sekolah: website, email_sekolah: email};
+    if(kecamatanEl) dataUpdate.kecamatan = kecamatanEl.value;
+    if(logoSekolah) dataUpdate.logo_sekolah = logoSekolah;
+    if(logoPemda) dataUpdate.logo_pemda = logoPemda;
+    try {
+      const hasil = await api.patch('/sekolah/'+state.editingSekolah, dataUpdate);
+      const sk = sekolahList.find(function(s){return s.npsn===state.editingSekolah;});
+      Object.assign(sk, hasil);
+    } catch(err){ tampilkanErrorApi(err); return; }
+    showToast('Data Sekolah berhasil diperbarui.');
+    state.editingSekolah = null;
+    tempFiles = {};
+    render();
+    return;
+  }
+  const npsn = val('skNpsn').trim();
   if(!npsn || !nama || !status || !alamat){ showToast('NPSN, Nama Sekolah, Status, dan Alamat Sekolah wajib diisi. Field lain boleh dilengkapi belakangan di tabel.'); return; }
   if(!/^[0-9]{8}$/.test(npsn)){ showToast('NPSN harus 8 digit angka.'); return; }
   if(nama.length > 25){ showToast('Nama Sekolah maksimal 25 karakter.'); return; }
@@ -2640,33 +2646,28 @@ function viewDataSekolah(){
   if(state.editingSekolah!==null){
     const editing = state.editingSekolah!=='new' ? sekolahList.find(function(s){return s.npsn===state.editingSekolah;}) : null;
     const d = editing || {};
-    if(editing){
-      return '<div class="card" style="max-width:500px;"><div class="card-body">'
-        + '<div class="fw-bold mb-1">Upload Logo — '+esc(d.nama_sekolah)+'</div>'
-        + '<div class="text-muted small mb-3">Field lain sudah bisa diedit langsung di tabel. Form ini khusus untuk mengunggah Logo Sekolah dan Logo Pemda.</div>'
-        + '<div class="row g-3 mb-3">'
-        + imageUploadField('Logo Sekolah', 'logo_sekolah', d.logo_sekolah, false)
-        + imageUploadField('Logo Pemda', 'logo_pemda', d.logo_pemda, false)
-        + '</div>'
-        + '<small class="text-muted d-block mb-3">Logo dipakai otomatis sebagai kop surat pada dokumen Pemberkasan TPG PTK. Ukuran maksimal 1MB (otomatis dikompres jika lebih besar), dan disamakan ukurannya dengan Logo Pemda.</small>'
-        + '<button type="button" class="btn btn-primary" '+act('saveSekolahClick')+'>'+ICONS.check+'Simpan</button> '
-        + '<button type="button" class="btn btn-secondary" '+act('cancelSekolah')+'>'+ICONS.x+'Batal</button>'
-        + '</div></div>';
-    }
-    const srSekolah = subRayons.find(function(sr){return sr.id===(state.user.sub_rayon_id||(subRayons[0]&&subRayons[0].id));});
+    const srSekolah = editing
+      ? subRayons.find(function(sr){return sr.id===d.sub_rayon_id;})
+      : subRayons.find(function(sr){return sr.id===(state.user.sub_rayon_id||(subRayons[0]&&subRayons[0].id));});
+    const opsiKec = kecamatanUntukSubRayon(srSekolah?srSekolah.nama_sub_rayon:'');
     return '<div class="card" style="max-width:650px;"><div class="card-body">'
-      + '<div class="mb-3"><label class="form-label">NPSN <span class="text-danger">*</span></label><input class="form-control" id="skNpsn" maxlength="8" value="'+esc(d.npsn)+'"/><small class="text-muted">8 digit angka.</small></div>'
+      + '<div class="fw-bold mb-3">'+(editing?'Edit Data Sekolah — '+esc(d.nama_sekolah):'Tambah Data Sekolah')+'</div>'
+      + '<div class="mb-3"><label class="form-label">NPSN <span class="text-danger">*</span></label><input class="form-control'+(editing?' bg-light':'')+'" id="skNpsn" maxlength="8" value="'+esc(d.npsn)+'"'+(editing?' readonly':'')+'/><small class="text-muted">8 digit angka.'+(editing?' NPSN tidak bisa diubah setelah data dibuat.':'')+'</small></div>'
       + '<div class="mb-3"><label class="form-label">Nama Sekolah <span class="text-danger">*</span></label><input class="form-control" id="skNamaSekolah" maxlength="25" value="'+esc(d.nama_sekolah)+'"/></div>'
       + '<div class="mb-3"><label class="form-label">Status <span class="text-danger">*</span></label><select class="form-select" id="skStatus"><option value="">-- Pilih --</option><option'+(d.status_sekolah==='Negeri'?' selected':'')+'>Negeri</option><option'+(d.status_sekolah==='Swasta'?' selected':'')+'>Swasta</option></select></div>'
       + '<div class="mb-3"><label class="form-label">Alamat Sekolah <span class="text-danger">*</span></label><textarea class="form-control" id="skAlamatSekolah" maxlength="100">'+esc(d.alamat_sekolah)+'</textarea></div>'
       + '<div class="row g-3 mb-3">'
       + '<div class="col-md-6"><label class="form-label">Nama Sub Rayon <span class="text-muted small">(otomatis)</span></label><input class="form-control bg-light" value="'+esc(srSekolah?srSekolah.nama_sub_rayon:'-')+'" readonly/></div>'
-      + '<div class="col-md-6"><label class="form-label">Kecamatan <span class="text-muted small">(pilih nanti di tabel)</span></label><input class="form-control bg-light" value="Belum dipilih" readonly/></div>'
+      + '<div class="col-md-6"><label class="form-label">Kecamatan'+(editing?' <span class="text-danger">*</span>':' <span class="text-muted small">(pilih nanti di tabel)</span>')+'</label>'
+      + (editing
+          ? '<select class="form-select" id="skKecamatan"><option value="">-- Pilih --</option>'+opsiKec.map(function(k){return '<option value="'+esc(k)+'"'+(k===d.kecamatan?' selected':'')+'>'+esc(k)+'</option>';}).join('')+'</select>'
+          : '<input class="form-control bg-light" value="Belum dipilih" readonly/>')
       + '</div>'
-      + '<div class="mb-3"><label class="form-label">Nama Pengawas Pembina</label><input class="form-control" id="skNamaPengawas" value="'+esc(d.nama_pengawas_pembina)+'" placeholder="Boleh dilengkapi nanti di tabel"/></div>'
-      + '<div class="mb-3"><label class="form-label">NIP Pengawas Pembina</label><input class="form-control" id="skNipPengawas" maxlength="18" value="'+esc(d.nip_pengawas_pembina)+'" placeholder="Boleh dilengkapi nanti di tabel"/></div>'
-      + '<div class="mb-3"><label class="form-label">Nama Kepala Sekolah</label><input class="form-control" id="skNamaKepsek" value="'+esc(d.nama_kepala_sekolah)+'" placeholder="Boleh dilengkapi nanti di tabel"/></div>'
-      + '<div class="mb-3"><label class="form-label">NIP Kepala Sekolah</label><input class="form-control" id="skNipKepsek" maxlength="18" value="'+esc(d.nip_kepala_sekolah)+'" placeholder="Boleh dilengkapi nanti di tabel"/></div>'
+      + '</div>'
+      + '<div class="mb-3"><label class="form-label">Nama Pengawas Pembina</label><input class="form-control" id="skNamaPengawas" value="'+esc(d.nama_pengawas_pembina)+'" placeholder="Boleh dilengkapi belakangan"/></div>'
+      + '<div class="mb-3"><label class="form-label">NIP Pengawas Pembina</label><input class="form-control" id="skNipPengawas" maxlength="18" value="'+esc(d.nip_pengawas_pembina)+'" placeholder="Boleh dilengkapi belakangan"/></div>'
+      + '<div class="mb-3"><label class="form-label">Nama Kepala Sekolah</label><input class="form-control" id="skNamaKepsek" value="'+esc(d.nama_kepala_sekolah)+'" placeholder="Boleh dilengkapi belakangan"/></div>'
+      + '<div class="mb-3"><label class="form-label">NIP Kepala Sekolah</label><input class="form-control" id="skNipKepsek" maxlength="18" value="'+esc(d.nip_kepala_sekolah)+'" placeholder="Boleh dilengkapi belakangan"/></div>'
       + '<div class="mb-3"><label class="form-label">Nama Pemerintah Daerah</label><input class="form-control" id="skNamaPemda" value="'+esc(d.nama_pemda)+'" placeholder="cth: Pemerintah Kabupaten Sukabumi"/></div>'
       + '<div class="row g-3 mb-3">'
       + '<div class="col-md-6"><label class="form-label">Website Sekolah</label><input class="form-control" id="skWebsite" value="'+esc(d.website_sekolah)+'" placeholder="Opsional, cth: www.sdncontoh.sch.id"/></div>'
@@ -2676,7 +2677,7 @@ function viewDataSekolah(){
       + imageUploadField('Logo Sekolah', 'logo_sekolah', d.logo_sekolah, false)
       + imageUploadField('Logo Pemda', 'logo_pemda', d.logo_pemda, false)
       + '</div>'
-      + '<small class="text-muted d-block mb-3">Semua field selain NPSN & Nama Sekolah boleh dilengkapi belakangan langsung di tabel.</small>'
+      + (editing ? '' : '<small class="text-muted d-block mb-3">Semua field selain NPSN & Nama Sekolah boleh dilengkapi belakangan langsung di tabel.</small>')
       + '<button type="button" class="btn btn-primary" '+act('saveSekolahClick')+'>'+ICONS.check+'Simpan</button> '
       + '<button type="button" class="btn btn-secondary" '+act('cancelSekolah')+'>'+ICONS.x+'Batal</button>'
       + '</div></div>';
