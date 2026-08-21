@@ -51,14 +51,19 @@ router.post('/', async (req, res) => {
 });
 
 router.patch('/:id', async (req, res) => {
-  const kolomDiizinkan = ['nama_ops','status_kepegawaian','nip','tempat_lahir','tanggal_lahir','jabatan','nama_admin_bosp','unit_kerja','no_whatsapp','alamat_rumah'];
+  const kolomDiizinkan = ['nama_ops','status_kepegawaian','nip','tempat_lahir','tanggal_lahir','jabatan','nama_admin_bosp','unit_kerja','no_whatsapp','alamat_rumah','foto_ops','sk_ops_bendahara'];
+  const kolomWajib = ['nama_ops','jabatan','unit_kerja'];
   const updates = Object.keys(req.body).filter(k => kolomDiizinkan.includes(k));
   if (updates.length === 0) return res.status(400).json({ error: 'Tidak ada field valid.' });
   if (updates.includes('no_whatsapp') && req.body.no_whatsapp && !/^[0-9]{1,12}$/.test(req.body.no_whatsapp)) {
     return res.status(400).json({ error: 'No WhatsApp maksimal 12 digit angka.' });
   }
   const setClause = updates.map((k, i) => `${k} = $${i + 1}`).join(', ');
-  const values = updates.map(k => req.body[k]);
+  const values = updates.map(k => {
+    const v = req.body[k];
+    if (!kolomWajib.includes(k) && (v === '' || v === undefined)) return null;
+    return v;
+  });
   values.push(req.params.id);
   const client = await pool.connect();
   try {
