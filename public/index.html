@@ -103,8 +103,22 @@
     background: var(--app-login-bg-override, url('/assets/bg-2.jpg') center center / cover no-repeat);
   }
   .login-card {
-    width: 380px; border-radius: 14px; background: rgba(255,255,255,0.92);
-    backdrop-filter: blur(6px); padding: 16px 24px; box-shadow: 0 12px 40px rgba(0,0,0,0.18);
+    width: 380px; border-radius: 18px; background: rgba(255,255,255,0.62);
+    backdrop-filter: blur(14px) saturate(160%); -webkit-backdrop-filter: blur(14px) saturate(160%);
+    border: 1px solid rgba(255,255,255,0.35);
+    padding: 20px 26px; color: #0f1b2d;
+    box-shadow:
+      0 18px 45px rgba(10,20,45,0.35),
+      0 2px 0 rgba(255,255,255,0.6) inset,
+      0 -18px 40px rgba(10,20,45,0.06) inset;
+  }
+  .login-card label, .login-card .text-muted { color: #29394f !important; }
+  .login-card .form-control, .login-card .form-select {
+    background: rgba(255,255,255,0.55); border: 1px solid rgba(255,255,255,0.6);
+    box-shadow: 0 1px 3px rgba(10,20,45,0.10) inset;
+  }
+  .login-card .form-control:focus, .login-card .form-select:focus {
+    background: rgba(255,255,255,0.85); border-color: var(--primary);
   }
   .login-card input::placeholder { color: #b3b9c4; opacity: 1; }
   .modal-backdrop-custom { position: fixed; inset: 0; background: rgba(15,23,42,0.55); display: flex; align-items: center; justify-content: center; z-index: 2000; padding: 16px; }
@@ -362,6 +376,7 @@ const state = {
   verifikasiBkuPopup: null,
   importValidationErrors: null,
   importGagalRincian: null,
+  regSekolahDitemukan: null,
   pajakZoom: 100,
   pajakMismatchPopup: null,
   exportValidationErrors: null,
@@ -961,24 +976,31 @@ function cancelOperator(){ tempFiles = {}; state.editingOperator = null; render(
 async function saveOperatorClick(){
   const fotoOps = tempFiles.foto_ops;
   const skOpsBendahara = tempFiles.sk_ops_bendahara;
+  const namaOps = val('opNamaOps').trim();
+  const unitKerja = val('opUnitKerja');
+  const jabatan = val('opJabatan');
   if(state.editingOperator && state.editingOperator!=='new'){
     const rec = operatorList.find(function(o){return o.id===state.editingOperator;});
     if(!rec){ showToast('Data operator tidak ditemukan.'); state.editingOperator = null; render(); return; }
-    if(!fotoOps && !skOpsBendahara){ state.editingOperator = null; tempFiles = {}; render(); return; }
+    if(!namaOps || !unitKerja || !jabatan){ showToast('Nama Operator, Unit Kerja, dan Jabatan wajib diisi.'); return; }
+    const dataUpdate = {
+      nama_ops: namaOps, unit_kerja: unitKerja, jabatan: jabatan,
+      nama_admin_bosp: val('opNamaAdminBosp').trim(), nip: val('opNip').trim(),
+      status_kepegawaian: val('opStatusKepegawaian').trim(), tempat_lahir: val('opTempatLahir').trim(),
+      tanggal_lahir: val('opTanggalLahir'), no_whatsapp: val('opNoWhatsapp').trim(), alamat_rumah: val('opAlamatRumah').trim(),
+    };
+    if(fotoOps) dataUpdate.foto_ops = fotoOps;
+    if(skOpsBendahara) dataUpdate.sk_ops_bendahara = skOpsBendahara;
     try {
-      await api.patch('/operator/'+rec.id, Object.assign({}, fotoOps?{foto_ops:fotoOps}:{}, skOpsBendahara?{sk_ops_bendahara:skOpsBendahara}:{}));
+      const hasil = await api.patch('/operator/'+rec.id, dataUpdate);
+      Object.assign(rec, hasil);
     } catch(err){ tampilkanErrorApi(err); return; }
-    if(fotoOps) rec.foto_ops = fotoOps;
-    if(skOpsBendahara) rec.sk_ops_bendahara = skOpsBendahara;
-    showToast('Foto/SK berhasil disimpan.');
+    showToast('Data Operator berhasil diperbarui.');
     tempFiles = {};
     state.editingOperator = null;
     render();
     return;
   }
-  const namaOps = val('opNamaOps').trim();
-  const unitKerja = val('opUnitKerja');
-  const jabatan = val('opJabatan');
   if(!namaOps || !unitKerja || !jabatan){ showToast('Nama Operator, Unit Kerja, dan Jabatan wajib diisi. Field lain boleh dilengkapi belakangan di tabel.'); return; }
   try {
     const created = await api.post('/operator', {nama_ops: namaOps, unit_kerja: unitKerja, jabatan: jabatan, sub_rayon_id: subRayonIdWajib(), input_by: state.user.username});
@@ -1448,6 +1470,8 @@ function setupDelegation(){
   app.dataset.delegated = '1';
 
   app.addEventListener('click', function(e){
+    const elPilihSekolah = e.target.closest('[data-npsn-pilih]');
+    if(elPilihSekolah){ pilihSekolahRegistrasi(elPilihSekolah.dataset.npsnPilih, elPilihSekolah.dataset.namaPilih); return; }
     const el = e.target.closest('[data-action]');
     if(!el) return;
     e.preventDefault();
@@ -1504,6 +1528,8 @@ function setupDelegation(){
 
   app.addEventListener('input', function(e){
     const el = e.target;
+    if(el.id === 'regCariSekolah'){ cariSekolahRegistrasi(el.value); return; }
+    if(el.id === 'regNpsn'){ validasiNpsnRegistrasi(el.value); return; }
     if(el.dataset && el.dataset.onInput){
       const fn = el.dataset.onInput;
       if(fn === 'searchQ2a'){ state.searchQ2a = el.value; render(); }
@@ -1533,24 +1559,8 @@ function setupDelegation(){
     }
   });
 
-  // Registrasi: begitu fokus pindah dari NPSN, otomatis isi Username = NPSN dan kunci (tidak lewat render()
-  // supaya field lain yang sudah diisi tidak ikut ter-reset).
-  app.addEventListener('focusout', function(e){
-    const el = e.target;
-    if(el && el.id === 'regNpsn'){
-      const usernameEl = document.getElementById('regUsername');
-      const npsn = el.value.trim();
-      if(usernameEl && npsn){
-        const dipakai = function(u){ return superadminAccounts.some(function(a){return a.username===u;}) || adminAccounts.some(function(a){return a.username===u;}); };
-        let kandidat = npsn;
-        let n = 2;
-        while(dipakai(kandidat)){ kandidat = npsn+'-'+n; n++; }
-        usernameEl.value = kandidat;
-        usernameEl.readOnly = true;
-        usernameEl.classList.add('bg-light');
-      }
-    }
-  });
+  // (Logika lama auto-suffix username saat NPSN diisi sudah dipindah & diperbaiki di dalam validasiNpsnRegistrasi(),
+  // yang memeriksa duplikasi LANGSUNG ke server -- bukan ke array lokal yang masih kosong sebelum login.)
 
   app.addEventListener('change', function(e){
     const el = e.target;
@@ -2877,24 +2887,29 @@ function viewDataOperator(){
   if(state.editingOperator!==null){
     const editing = state.editingOperator!=='new' ? operatorList.find(function(o){return o.id===state.editingOperator;}) : null;
     const d = editing || {};
-    if(editing){
-      return '<div class="card" style="max-width:500px;"><div class="card-body">'
-        + '<div class="fw-bold mb-1">Upload Foto & SK — '+esc(d.nama_ops)+'</div>'
-        + '<div class="text-muted small mb-3">Field lain sudah bisa diedit langsung di tabel. Form ini khusus untuk mengunggah Foto OPS dan SK.</div>'
-        + imageUploadField('Foto OPS (2x3)', 'foto_ops', d.foto_ops, false)
-        + pdfUploadField(d.jabatan==='Bendahara/Admin BOSP' ? 'Upload SK Bendahara (PDF, maks. 1MB)' : 'Upload SK Operator / SK Bendahara (PDF, maks. 1MB)', 'sk_ops_bendahara', d.sk_ops_bendahara, false)
-        + '<small class="text-muted d-block mb-3 mt-2">Foto OPS otomatis dipotong rasio 2x3. Upload SK harus format PDF, maksimal 1MB.</small>'
-        + '<button type="button" class="btn btn-primary" '+act('saveOperatorClick')+'>'+'Simpan</button> '
-        + '<button type="button" class="btn btn-secondary" '+act('cancelOperator')+'>'+'Batal</button>'
-        + '</div></div>';
-    }
     return '<div class="card" style="max-width:650px;"><div class="card-body">'
+      + '<div class="fw-bold mb-3">'+(editing?'Edit Data Operator — '+esc(d.nama_ops):'Tambah Data Operator')+'</div>'
       + '<div class="mb-3"><label class="form-label">Nama Operator / Bendahara BOSP <span class="text-danger">*</span></label><input class="form-control" id="opNamaOps" value="'+esc(d.nama_ops)+'"/></div>'
       + '<div class="row g-3 mb-3">'
-      + '<div class="col-md-6"><label class="form-label">Unit Kerja <span class="text-danger">*</span></label><select class="form-select" id="opUnitKerja" data-change-action="isiOperatorUnitKerja"><option value="">-- Pilih Sekolah --</option>'+sekolah.map(function(s){return '<option value="'+s.npsn+'">'+esc(s.nama_sekolah)+'</option>';}).join('')+'</select></div>'
-      + '<div class="col-md-6"><label class="form-label">Jabatan <span class="text-danger">*</span></label><select class="form-select" id="opJabatan"><option value="">-- Pilih --</option><option>Operator Dapodik</option><option>Bendahara/Admin BOSP</option><option>Admin OP Aset</option></select></div>'
+      + '<div class="col-md-6"><label class="form-label">Unit Kerja <span class="text-danger">*</span></label><select class="form-select" id="opUnitKerja" data-change-action="isiOperatorUnitKerja"><option value="">-- Pilih Sekolah --</option>'+sekolah.map(function(s){return '<option value="'+s.npsn+'"'+(d.unit_kerja===s.npsn?' selected':'')+'>'+esc(s.nama_sekolah)+'</option>';}).join('')+'</select></div>'
+      + '<div class="col-md-6"><label class="form-label">Jabatan <span class="text-danger">*</span></label><select class="form-select" id="opJabatan"><option value="">-- Pilih --</option><option'+(d.jabatan==='Operator Dapodik'?' selected':'')+'>Operator Dapodik</option><option'+(d.jabatan==='Bendahara/Admin BOSP'?' selected':'')+'>Bendahara/Admin BOSP</option><option'+(d.jabatan==='Admin OP Aset'?' selected':'')+'>Admin OP Aset</option></select></div>'
       + '</div>'
-      + '<small class="text-muted d-block mb-3">Field lain (NIP, Tempat/Tgl Lahir, No WhatsApp, Alamat, dll.) boleh dilengkapi belakangan langsung di tabel.</small>'
+      + (d.jabatan==='Bendahara/Admin BOSP' ? '<div class="mb-3"><label class="form-label">Nama Admin BOSP</label><input class="form-control" id="opNamaAdminBosp" value="'+esc(d.nama_admin_bosp)+'"/></div>' : '<input type="hidden" id="opNamaAdminBosp" value="'+esc(d.nama_admin_bosp)+'"/>')
+      + '<div class="row g-3 mb-3">'
+      + '<div class="col-md-6"><label class="form-label">NIP</label><input class="form-control" id="opNip" maxlength="18" value="'+esc(d.nip)+'" placeholder="18 digit / -"/></div>'
+      + '<div class="col-md-6"><label class="form-label">Status Kepegawaian</label><input class="form-control" id="opStatusKepegawaian" value="'+esc(d.status_kepegawaian)+'" placeholder="cth: PNS, Honorer"/></div>'
+      + '</div>'
+      + '<div class="row g-3 mb-3">'
+      + '<div class="col-md-6"><label class="form-label">Tempat Lahir</label><input class="form-control" id="opTempatLahir" value="'+esc(d.tempat_lahir)+'"/></div>'
+      + '<div class="col-md-6"><label class="form-label">Tanggal Lahir</label><input type="date" class="form-control" id="opTanggalLahir" value="'+esc(d.tanggal_lahir?String(d.tanggal_lahir).slice(0,10):'')+'"/></div>'
+      + '</div>'
+      + '<div class="row g-3 mb-3">'
+      + '<div class="col-md-6"><label class="form-label">No WhatsApp</label><input class="form-control" id="opNoWhatsapp" maxlength="12" value="'+esc(d.no_whatsapp)+'" placeholder="Tanpa 0/+62 di depan"/></div>'
+      + '<div class="col-md-6"><label class="form-label">Alamat Rumah</label><input class="form-control" id="opAlamatRumah" value="'+esc(d.alamat_rumah)+'"/></div>'
+      + '</div>'
+      + imageUploadField('Foto OPS (2x3)', 'foto_ops', d.foto_ops, false)
+      + pdfUploadField(d.jabatan==='Bendahara/Admin BOSP' ? 'Upload SK Bendahara (PDF, maks. 1MB)' : 'Upload SK Operator / SK Bendahara (PDF, maks. 1MB)', 'sk_ops_bendahara', d.sk_ops_bendahara, false)
+      + '<small class="text-muted d-block mb-3 mt-2">Foto OPS otomatis dipotong rasio 2x3. Upload SK harus format PDF, maksimal 1MB.</small>'
       + '<button type="button" class="btn btn-primary" '+act('saveOperatorClick')+'>'+'Simpan</button> '
       + '<button type="button" class="btn btn-secondary" '+act('cancelOperator')+'>'+'Batal</button>'
       + '</div></div>';
@@ -3966,10 +3981,17 @@ function viewRegistrasiForm(){
 
 function viewRegistrasiFormCompact(){
   return '<div>'
-    + '<div class="fw-bold mb-1" style="font-size:14px;">Registrasi Sekolah &amp; Admin Baru</div>'
-    + '<p class="text-muted small mb-2" style="font-size:11px;">Data lengkap bisa dilengkapi belakangan setelah login.</p>'
-    + '<div class="mb-2"><label class="form-label small mb-1">NPSN</label><input class="form-control form-control-sm" id="regNpsn" maxlength="8" placeholder="8 digit angka"/></div>'
-    + '<div class="mb-2"><label class="form-label small mb-1">Nama Sekolah</label><input class="form-control form-control-sm" id="regNamaSekolah" maxlength="25"/></div>'
+    + '<div class="fw-bold mb-1" style="font-size:14px;">Registrasi Admin Sekolah</div>'
+    + '<p class="text-muted small mb-2" style="font-size:11px;">NPSN sekolah Anda harus SUDAH terdaftar oleh Superadmin. Kalau lupa NPSN, cari lewat nama sekolah di bawah.</p>'
+    + '<div class="mb-2">'
+    + '<label class="form-label small mb-1">Lupa NPSN? Cari Nama Sekolah</label>'
+    + '<input class="form-control form-control-sm" id="regCariSekolah" placeholder="Ketik sebagian nama sekolah..." autocomplete="off"/>'
+    + '<div id="regHasilCariSekolah" style="max-height:140px;overflow-y:auto;border:1px solid #e6e8ec;border-radius:6px;margin-top:4px;display:none;background:#fff;"></div>'
+    + '</div>'
+    + '<div class="mb-2"><label class="form-label small mb-1">NPSN <span class="text-danger">*</span></label><input class="form-control form-control-sm" id="regNpsn" maxlength="8" placeholder="8 digit angka"/>'
+    + '<div id="regNpsnStatus" style="font-size:11px;margin-top:2px;"></div>'
+    + '</div>'
+    + '<div class="mb-2"><label class="form-label small mb-1">Nama Sekolah</label><input class="form-control form-control-sm bg-light" id="regNamaSekolah" readonly placeholder="Otomatis terisi setelah NPSN valid"/></div>'
     + '<div class="mb-2"><label class="form-label small mb-1">Nama Operator / Bendahara BOSP</label><input class="form-control form-control-sm" id="regNamaOperator"/></div>'
     + '<div class="mb-2"><label class="form-label small mb-1">Jabatan</label><select class="form-select form-select-sm" id="regJabatan"><option value="">-- Pilih --</option><option>Operator Dapodik</option><option>Bendahara/Admin BOSP</option><option>Admin OP Aset</option></select></div>'
     + '<div class="mb-2"><label class="form-label small mb-1">Nama Admin BOSP</label><input class="form-control form-control-sm" id="regNamaAdminBosp" placeholder="Nama Admin BOSP yang menaungi" disabled/></div>'
@@ -3980,48 +4002,116 @@ function viewRegistrasiFormCompact(){
     + '</div>';
 }
 
-function simpanRegistrasi(){
-  const npsn = val('regNpsn').trim(), namaSekolah = val('regNamaSekolah').trim(), namaOperator = val('regNamaOperator').trim();
+let _cariSekolahTimer = null;
+async function cariSekolahRegistrasi(kata){
+  clearTimeout(_cariSekolahTimer);
+  const kotak = document.getElementById('regHasilCariSekolah');
+  if(!kotak) return;
+  if(!kata || kata.trim().length < 2){ kotak.style.display='none'; kotak.innerHTML=''; return; }
+  _cariSekolahTimer = setTimeout(async function(){
+    let daftar;
+    try { daftar = await api.get('/sekolah'); } catch(e){ return; }
+    const hasil = daftar.filter(function(s){ return (s.nama_sekolah||'').toLowerCase().includes(kata.trim().toLowerCase()); }).slice(0,8);
+    if(hasil.length===0){ kotak.innerHTML = '<div class="p-2 text-muted small">Tidak ditemukan.</div>'; kotak.style.display='block'; return; }
+    kotak.innerHTML = hasil.map(function(s){
+      return '<div class="p-2 small" style="cursor:pointer;border-bottom:1px solid #f0f1f3;" data-npsn-pilih="'+esc(s.npsn)+'" data-nama-pilih="'+esc(s.nama_sekolah)+'">'+esc(s.nama_sekolah)+' <span class="text-muted">('+esc(s.npsn)+')</span></div>';
+    }).join('');
+    kotak.style.display = 'block';
+  }, 350);
+}
+function pilihSekolahRegistrasi(npsn, nama){
+  const kotak = document.getElementById('regHasilCariSekolah');
+  if(kotak){ kotak.style.display='none'; kotak.innerHTML=''; }
+  const npsnEl = document.getElementById('regNpsn');
+  const cariEl = document.getElementById('regCariSekolah');
+  if(npsnEl){ npsnEl.value = npsn; }
+  if(cariEl){ cariEl.value = ''; }
+  validasiNpsnRegistrasi(npsn);
+}
+async function validasiNpsnRegistrasi(npsn){
+  const statusEl = document.getElementById('regNpsnStatus');
+  const namaEl = document.getElementById('regNamaSekolah');
+  const userEl = document.getElementById('regUsername');
+  npsn = (npsn||'').trim();
+  state.regSekolahDitemukan = null;
+  if(namaEl) namaEl.value = '';
+  if(userEl) userEl.value = '';
+  if(!/^[0-9]{8}$/.test(npsn)){
+    if(statusEl) statusEl.innerHTML = npsn ? '<span class="text-danger">NPSN harus 8 digit angka.</span>' : '';
+    return;
+  }
+  if(statusEl) statusEl.innerHTML = '<span class="text-muted">Memeriksa NPSN...</span>';
+  let daftar;
+  try { daftar = await api.get('/sekolah'); } catch(e){ if(statusEl) statusEl.innerHTML = '<span class="text-danger">Gagal memeriksa NPSN, coba lagi.</span>'; return; }
+  const sk = daftar.find(function(s){ return s.npsn === npsn; });
+  const npsnElSekarang = document.getElementById('regNpsn');
+  if(!npsnElSekarang || npsnElSekarang.value.trim() !== npsn) return; // pengguna sudah ganti NPSN lagi, abaikan hasil basi
+  if(!sk){
+    if(statusEl) statusEl.innerHTML = '<span class="text-danger">NPSN ini belum terdaftar oleh Superadmin. Hubungi Superadmin untuk mendaftarkan sekolah Anda terlebih dahulu, atau cari nama sekolah di atas.</span>';
+    return;
+  }
+  state.regSekolahDitemukan = sk;
+  if(statusEl) statusEl.innerHTML = '<span class="text-success">Sekolah ditemukan: '+esc(sk.nama_sekolah)+'</span>';
+  if(namaEl) namaEl.value = sk.nama_sekolah;
+  // Username = NPSN, tapi kalau sudah dipakai (misal sekolah ini sudah punya Admin lain), tambahkan akhiran -2, -3, dst.
+  let daftarSuperadmin = [], daftarAdmin = [];
+  try { daftarSuperadmin = await api.get('/akun/superadmin'); daftarAdmin = await api.get('/akun/admin'); } catch(e){ /* kalau gagal, tetap pakai NPSN apa adanya */ }
+  const dipakai = function(u){ return daftarSuperadmin.some(function(a){return a.username===u;}) || daftarAdmin.some(function(a){return a.username===u;}); };
+  let usernameFinal = npsn, n = 2;
+  while(dipakai(usernameFinal)){ usernameFinal = npsn+'-'+n; n++; }
+  if(userEl) userEl.value = usernameFinal;
+}
+
+async function simpanRegistrasi(){
+  const npsn = val('regNpsn').trim(), namaOperator = val('regNamaOperator').trim();
   const jabatan = val('regJabatan'), password = val('regPassword');
   const namaAdminBosp = val('regNamaAdminBosp').trim();
   let username = val('regUsername').trim();
-  if(!npsn || !namaSekolah || !namaOperator || !jabatan || !password){ showToast('Semua field wajib diisi.'); return; }
+  if(!npsn || !namaOperator || !jabatan || !password){ showToast('Semua field wajib diisi.'); return; }
   if(jabatan==='Bendahara/Admin BOSP' && !namaAdminBosp){ showToast('Nama Admin BOSP wajib diisi untuk Jabatan Bendahara/Admin BOSP.'); return; }
   if(!/^[0-9]{8}$/.test(npsn)){ showToast('NPSN harus 8 digit angka.'); return; }
   if(password.length < 6){ showToast('Password minimal 6 karakter/angka.'); return; }
   if(!username){ showToast('Isi NPSN terlebih dahulu supaya Username otomatis terisi.'); return; }
 
-  // Satu Jabatan hanya untuk satu Admin per sekolah (NPSN). Kalau sudah ada, tolak dan arahkan ke Superadmin.
-  const jabatanSudahAda = adminAccounts.some(function(a){ return a.npsn===npsn && a.jabatan===jabatan; });
+  // NPSN WAJIB sudah terdaftar oleh Superadmin -- dicek ulang langsung ke server (bukan cuma andalkan status di layar).
+  let sk;
+  try {
+    const daftar = await api.get('/sekolah');
+    sk = daftar.find(function(s){ return s.npsn===npsn; });
+  } catch(e){ showToast('Gagal memeriksa NPSN ke server, silakan coba lagi.'); return; }
+  if(!sk){
+    showToast('NPSN '+npsn+' belum terdaftar oleh Superadmin di menu Data Sekolah. Registrasi tidak bisa dilanjutkan -- hubungi Superadmin untuk mendaftarkan sekolah Anda terlebih dahulu.');
+    return;
+  }
+
+  // Satu Jabatan hanya untuk satu Admin per sekolah (NPSN). Dicek langsung ke server.
+  let daftarOperatorSekolahIni, daftarAdmin;
+  try {
+    daftarOperatorSekolahIni = await api.get('/operator');
+    daftarAdmin = await api.get('/akun/admin');
+  } catch(e){ showToast('Gagal memeriksa data ke server, silakan coba lagi.'); return; }
+  const jabatanSudahAda = daftarAdmin.some(function(a){ return a.npsn===npsn && a.jabatan===jabatan; });
   if(jabatanSudahAda){
     showToast('Jabatan "'+jabatan+'" untuk sekolah dengan NPSN '+npsn+' sudah terdaftar oleh Admin lain. Hubungi Superadmin untuk reset atau perubahan data.');
     return;
   }
-  const usernameDipakai = superadminAccounts.some(function(a){return a.username===username;}) || adminAccounts.some(function(a){return a.username===username;});
-  if(usernameDipakai){ showToast('Username "'+username+'" sudah dipakai akun lain, silakan ulangi isi NPSN.'); return; }
 
-  const subRayonId = subRayons[0] ? subRayons[0].id : 1;
-  const sekolahSudahAda = sekolahList.find(function(s){return s.npsn===npsn;});
-
-  if(!sekolahSudahAda){
-    sekolahList.push({
-      npsn: npsn, nama_sekolah: namaSekolah, alamat_sekolah: '', nama_pengawas_pembina: '', nip_pengawas_pembina: '',
-      nama_kepala_sekolah: '', nip_kepala_sekolah: '', nama_pemda: '', website_sekolah: '', email_sekolah: '',
-      logo_sekolah: null, logo_pemda: null, sub_rayon_id: subRayonId, input_by: username,
+  const subRayonId = sk.sub_rayon_id;
+  try {
+    await api.post('/operator', {
+      nama_ops: namaOperator, jabatan: jabatan,
+      nama_admin_bosp: jabatan==='Bendahara/Admin BOSP' ? namaAdminBosp : '',
+      unit_kerja: npsn, sub_rayon_id: subRayonId, input_by: username,
     });
-  }
-  operatorList.push({
-    id: nextIdOperator++, nama_ops: namaOperator, nip: '-', tempat_lahir: '', tanggal_lahir: '', jabatan: jabatan,
-    nama_admin_bosp: jabatan==='Bendahara/Admin BOSP' ? namaAdminBosp : '',
-    unit_kerja: npsn, alamat_rumah: '', no_whatsapp: '', foto_ops: null, sk_ops_bendahara: null, sub_rayon_id: subRayonId, input_by: username,
-  });
-  adminAccounts.push({
-    id: nextAdminAccountId++, nama: namaOperator, level_admin: 'Admin Sekolah', jabatan: jabatan, npsn: npsn,
-    username: username, password: password, mustChangePassword: true, sub_rayon_id: subRayonId,
-  });
+    await api.post('/akun/admin', {
+      nama: namaOperator, level_admin: 'Admin Sekolah', jabatan: jabatan, npsn: npsn,
+      sub_rayon_id: subRayonId, username: username, password: password,
+    });
+  } catch(err){ tampilkanErrorApi(err); return; }
 
   state.showRegistrasi = false;
-  showToast('Registrasi berhasil! Sekolah "'+namaSekolah+'", Operator "'+namaOperator+'" ('+jabatan+'), dan akun Admin ("'+username+'") sudah tersimpan.'+(sekolahSudahAda?' (Sekolah ini sudah terdaftar sebelumnya, hanya Operator & Admin baru yang ditambahkan.)':' Lengkapi data sekolah/operator lewat menu Data Master.'));
+  state.regSekolahDitemukan = null;
+  showToast('Registrasi berhasil! Operator "'+namaOperator+'" ('+jabatan+') untuk sekolah "'+sk.nama_sekolah+'" dan akun Admin ("'+username+'") sudah tersimpan. Silakan login.');
   render();
 }
 
