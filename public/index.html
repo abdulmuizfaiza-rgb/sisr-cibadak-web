@@ -345,6 +345,7 @@ const state = {
   editingPenerimaanBosp: null, openAksiPenerimaanBosp: null,
   verifikasiBkuPopup: null,
   importValidationErrors: null,
+  importGagalRincian: null,
   pajakZoom: 100,
   pajakMismatchPopup: null,
   exportValidationErrors: null,
@@ -1413,7 +1414,7 @@ const ACTIONS = {
   editPenerimaanBosp, cancelPenerimaanBosp, toggleAksiPenerimaanBosp, isiPenerimaanBospSekolah, savePenerimaanBospClick, hapusPenerimaanBosp,
   formatText2, setFontSizeSurat, insertTabSurat, insertTableSurat, insertLinkSurat, insertTextBoxSurat, insertShapeSurat, insertImageSurat,
   simpanPengaturanTampilan, resetPengaturanTampilan, switchDashboardTab,
-  switchInformasiTab, simpanInformasiPopup, tutupInformasiPopup,
+  switchInformasiTab, simpanInformasiPopup, tutupInformasiPopup, tutupImportGagalPopup,
 };
 
 document.addEventListener('DOMContentLoaded', setupDelegation);
@@ -1923,6 +1924,7 @@ function layout(body){
     + '</div></div></div>'
     + ((uAccount && uAccount.mustChangePassword && state.showChangePassword) ? viewGantiPasswordPopup() : '')
     + (state.importValidationErrors ? viewImportValidationPopup() : '')
+    + (state.importGagalRincian ? viewImportGagalPopup() : '')
     + (state.pajakMismatchPopup ? viewPajakMismatchPopup() : '')
     + (state.exportValidationErrors ? viewExportValidationPopup() : '')
     + (state.stockOpnamePasteWarning ? viewStockOpnamePasteWarningPopup() : '')
@@ -2579,8 +2581,10 @@ function validateDataSekolahRows(sheet){
   }
   return errors;
 }
-function importDataSekolahExcel(sheet){
-  let added = 0, updated = 0, unchanged = 0;
+async function importDataSekolahExcel(sheet){
+  let added = 0, updated = 0, unchanged = 0, gagal = 0;
+  const errorRincian = [];
+  state.loadingAwal = true; render();
   for(let r=2; r<=sheet.rowCount; r++){
     const row = sheet.getRow(r);
     const npsn = cellText(row,1).trim();
@@ -2594,13 +2598,25 @@ function importDataSekolahExcel(sheet){
       nama_pemda: cellText(row,11).trim(), website_sekolah: cellText(row,12).trim(), email_sekolah: cellText(row,13).trim(),
     };
     const existing = sekolahList.find(function(s){return s.npsn===npsn;});
-    if(existing){
-      if(srMatch) existing.sub_rayon_id = srMatch.id;
-      if(objectsDiffer(existing, data)){ Object.assign(existing, data); updated++; } else { unchanged++; }
-    }
-    else { sekolahList.push(Object.assign({npsn: npsn, sub_rayon_id: srMatch?srMatch.id:(subRayonIdWajib()), input_by: state.user.username, logo_sekolah:null, logo_pemda:null}, data)); added++; }
+    try {
+      if(existing){
+        if(srMatch) data.sub_rayon_id = srMatch.id;
+        if(objectsDiffer(existing, data)){
+          const hasil = await api.patch('/sekolah/'+encodeURIComponent(npsn), data);
+          Object.assign(existing, hasil);
+          updated++;
+        } else { unchanged++; }
+      } else {
+        const payload = Object.assign({npsn: npsn, sub_rayon_id: srMatch?srMatch.id:(subRayonIdWajib()), input_by: state.user.username}, data);
+        const hasil = await api.post('/sekolah', payload);
+        sekolahList.push(Object.assign({logo_sekolah:null, logo_pemda:null}, payload, hasil));
+        added++;
+      }
+    } catch(err){ gagal++; errorRincian.push('Baris '+r+' (NPSN '+npsn+'): '+(err.message||'Gagal disimpan.')); }
   }
-  showToast(added+' sekolah baru ditambahkan, '+updated+' sekolah diperbarui (ada perbedaan), '+unchanged+' sekolah tidak berubah (data sama).');
+  state.loadingAwal = false;
+  showToast(added+' sekolah baru ditambahkan, '+updated+' sekolah diperbarui, '+unchanged+' tidak berubah'+(gagal>0?', '+gagal+' GAGAL disimpan':'')+'.');
+  if(errorRincian.length>0){ state.importGagalRincian = errorRincian; }
   render();
 }
 function importDataSekolahClick(){
@@ -2718,8 +2734,10 @@ function validateDataOperatorRows(sheet){
   }
   return errors;
 }
-function importDataOperatorExcel(sheet){
-  let added = 0, updated = 0, unchanged = 0;
+async function importDataOperatorExcel(sheet){
+  let added = 0, updated = 0, unchanged = 0, gagal = 0;
+  const errorRincian = [];
+  state.loadingAwal = true; render();
   for(let r=2; r<=sheet.rowCount; r++){
     const row = sheet.getRow(r);
     const nama = cellText(row,1).trim();
@@ -2730,10 +2748,24 @@ function importDataOperatorExcel(sheet){
       no_whatsapp: cellText(row,8).trim(), alamat_rumah: cellText(row,9).trim(),
     };
     const existing = operatorList.find(function(o){return o.nama_ops===nama && o.unit_kerja===data.unit_kerja;});
-    if(existing){ if(objectsDiffer(existing, data)){ Object.assign(existing, data); updated++; } else { unchanged++; } }
-    else { operatorList.push(Object.assign({id: nextIdOperator++, sub_rayon_id: subRayonIdWajib(), input_by: state.user.username, foto_ops:null, sk_ops_bendahara:null}, data)); added++; }
+    try {
+      if(existing){
+        if(objectsDiffer(existing, data)){
+          const hasil = await api.patch('/operator/'+existing.id, data);
+          Object.assign(existing, hasil);
+          updated++;
+        } else { unchanged++; }
+      } else {
+        const payload = Object.assign({sub_rayon_id: subRayonIdWajib(), input_by: state.user.username}, data);
+        const hasil = await api.post('/operator', payload);
+        operatorList.push(Object.assign({foto_ops:null, sk_ops_bendahara:null}, payload, hasil));
+        added++;
+      }
+    } catch(err){ gagal++; errorRincian.push('Baris '+r+' ('+nama+'): '+(err.message||'Gagal disimpan.')); }
   }
-  showToast(added+' operator baru ditambahkan, '+updated+' operator diperbarui (ada perbedaan), '+unchanged+' operator tidak berubah (data sama).');
+  state.loadingAwal = false;
+  showToast(added+' operator baru ditambahkan, '+updated+' operator diperbarui, '+unchanged+' tidak berubah'+(gagal>0?', '+gagal+' GAGAL disimpan':'')+'.');
+  if(errorRincian.length>0){ state.importGagalRincian = errorRincian; }
   render();
 }
 function importDataOperatorClick(){
@@ -7331,6 +7363,19 @@ function viewImportValidationPopup(){
       }).join('')
     + '</tbody></table></div>'
     + '<button type="button" class="btn btn-secondary btn-sm w-100 mt-2" '+act('tutupImportValidationPopup')+'>Tutup, Saya Akan Perbaiki File Excel-nya</button>'
+    + '</div></div>';
+}
+
+function tutupImportGagalPopup(){ state.importGagalRincian = null; render(); }
+function viewImportGagalPopup(){
+  const daftar = state.importGagalRincian || [];
+  return '<div class="modal-backdrop-custom"><div class="modal-card-custom" style="max-width:700px;max-height:80vh;overflow-y:auto;">'
+    + '<div class="fw-bold mb-1 text-danger">'+daftar.length+' Baris GAGAL Disimpan Saat Import</div>'
+    + '<p class="text-muted small mb-3">Baris-baris di bawah ini TIDAK berhasil masuk ke database (baris lain yang tidak disebutkan di sini sudah berhasil tersimpan). Perbaiki data pada baris berikut di file Excel Anda, lalu Import Excel ulang khusus untuk baris-baris ini.</p>'
+    + '<ul class="small" style="padding-left:18px;">'
+    + daftar.map(function(e){ return '<li class="mb-1 text-danger">'+esc(e)+'</li>'; }).join('')
+    + '</ul>'
+    + '<button type="button" class="btn btn-secondary btn-sm w-100 mt-2" '+act('tutupImportGagalPopup')+'>Mengerti, Tutup</button>'
     + '</div></div>';
 }
 
