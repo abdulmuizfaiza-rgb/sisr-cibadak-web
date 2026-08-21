@@ -126,6 +126,22 @@
   @media (max-width: 700px) {
     .login-shell { justify-content: center; padding-right: 16px; padding-left: 16px; }
   }
+
+  /* ===== Gaya Tombol 3D (berlaku ke SEMUA tombol di seluruh aplikasi) ===== */
+  .btn {
+    border-bottom-width: 3px !important;
+    box-shadow: 0 2px 0 rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.08);
+    transform: translateY(0);
+    transition: transform 0.08s ease, box-shadow 0.08s ease;
+  }
+  .btn:hover { box-shadow: 0 3px 0 rgba(0,0,0,0.14), 0 2px 4px rgba(0,0,0,0.10); transform: translateY(-1px); }
+  .btn:active, .btn.active {
+    box-shadow: 0 0px 0 rgba(0,0,0,0.10) !important;
+    transform: translateY(2px);
+    border-bottom-width: 1px !important;
+  }
+  .btn:disabled { box-shadow: none; transform: none; }
+  .btn-sm { border-bottom-width: 2px !important; }
 </style>
 <style id="printPageSizeStyle"></style>
 </head>
@@ -1950,7 +1966,7 @@ function viewGantiPasswordPopup(){
     + '<div class="mb-2"><label class="form-label small mb-1">Password Lama</label><input type="password" class="form-control form-control-sm" id="gpLama"/></div>'
     + '<div class="mb-2"><label class="form-label small mb-1">Password Baru</label><input type="password" class="form-control form-control-sm" id="gpBaru"/></div>'
     + '<div class="mb-3"><label class="form-label small mb-1">Konfirmasi Password Baru</label><input type="password" class="form-control form-control-sm" id="gpKonfirmasi"/></div>'
-    + '<button type="button" class="btn btn-primary btn-sm w-100 mb-2" '+act('simpanGantiPassword')+'>'+ICONS.check+'Simpan Password Baru</button>'
+    + '<button type="button" class="btn btn-primary btn-sm w-100 mb-2" '+act('simpanGantiPassword')+'>'+'Simpan Password Baru</button>'
     + '<button type="button" class="btn btn-outline-secondary btn-sm w-100" '+act('tutupGantiPassword')+'>Nanti Saja</button>'
     + '</div></div>';
 }
@@ -1989,7 +2005,7 @@ function viewSetupAwal(){
     + '<div class="mb-3"><label class="form-label small">Username</label><input class="form-control" id="setupUsername" placeholder="cth: superadmin"/></div>'
     + '<div class="mb-3"><label class="form-label small">Password</label><input type="password" class="form-control" id="setupPassword" placeholder="Minimal 6 karakter"/></div>'
     + '<div class="mb-3"><label class="form-label small">Ulangi Password</label><input type="password" class="form-control" id="setupPasswordUlang" placeholder="Ketik ulang password"/></div>'
-    + '<button type="button" class="btn btn-primary w-100" '+act('simpanSetupAwal')+'>'+ICONS.check+'Buat Akun & Mulai Gunakan Aplikasi</button>'
+    + '<button type="button" class="btn btn-primary w-100" '+act('simpanSetupAwal')+'>'+'Buat Akun & Mulai Gunakan Aplikasi</button>'
     + '<div class="text-muted small mt-3 text-center">Akun ini adalah akun pengelola tertinggi (Superadmin). Simpan baik-baik username &amp; password-nya.</div>'
     + '</div></div>';
 }
@@ -2075,7 +2091,7 @@ function loginFormSuperAdmin(){
     + '<div class="mb-2"><label class="form-label small mb-1">Username</label><input class="form-control form-control-sm" id="loginUsername" autocomplete="off"/></div>'
     + '<div class="mb-2"><label class="form-label small mb-1">Password</label><input type="password" class="form-control form-control-sm" id="loginPassword" placeholder="Minimal 6 karakter/angka"/></div>'
     + (tahunBaruSudahDiproses ? tahunSelectorHtml() : '')
-    + '<button type="button" class="btn btn-primary btn-sm w-100" '+act('handleLoginClick',['superadmin'])+'>'+ICONS.login+'Masuk sebagai Super Admin</button>'
+    + '<button type="button" class="btn btn-primary btn-sm w-100" '+act('handleLoginClick',['superadmin'])+'>'+'Masuk sebagai Super Admin</button>'
     + '<div class="text-center mt-1" style="font-size:11px;color:#9aa3b2;">Demo: superadmin / admin123</div>'
     + '</div>';
 }
@@ -2085,7 +2101,7 @@ function loginFormAdminSR(){
     + '<div class="mb-2"><label class="form-label small mb-1">Username</label><input class="form-control form-control-sm" id="loginUsername" autocomplete="off"/></div>'
     + '<div class="mb-2"><label class="form-label small mb-1">Password</label><input type="password" class="form-control form-control-sm" id="loginPassword" placeholder="Minimal 6 karakter/angka"/></div>'
     + (tahunBaruSudahDiproses ? tahunSelectorHtml() : '')
-    + '<button type="button" class="btn btn-primary btn-sm w-100" '+act('handleLoginClick',['admin_sr'])+'>'+ICONS.login+'Masuk sebagai Admin Sekolah</button>'
+    + '<button type="button" class="btn btn-primary btn-sm w-100" '+act('handleLoginClick',['admin_sr'])+'>'+'Masuk sebagai Admin Sekolah</button>'
     + '<div class="text-center mt-1" style="font-size:11px;color:#9aa3b2;">Demo: adminsr1 / admin123</div>'
     + '<div class="text-center mt-2"><a href="#" style="font-size:12px;" '+act('bukaRegistrasi')+'>Sekolah baru? Registrasi di sini</a></div>'
     + '</div>';
@@ -2383,7 +2399,7 @@ function viewDashboardOps(){
     + breakdownCardHtml('Sertifikasi — Naungan', tally(sert, function(s){return s.naungan;}), 'ops_sert_naungan')
     + '</div>';
   if(state.user.role==='admin_sr'){
-    html += '<button type="button" class="btn btn-outline-secondary btn-sm mt-2" '+act('cekAksesMenuClick')+'>'+ICONS.pencil+'Cek Akses Menu</button>';
+    html += '<button type="button" class="btn btn-outline-secondary btn-sm mt-2" '+act('cekAksesMenuClick')+'>'+'Cek Akses Menu</button>';
   }
   return html;
 }
@@ -2403,7 +2419,7 @@ function viewDashboardBosp(){
       + '</div></div>';
   }).join('');
   if(state.user.role==='admin_sr'){
-    html += '<button type="button" class="btn btn-outline-secondary btn-sm mt-2" '+act('cekAksesMenuClick')+'>'+ICONS.pencil+'Cek Akses Menu</button>';
+    html += '<button type="button" class="btn btn-outline-secondary btn-sm mt-2" '+act('cekAksesMenuClick')+'>'+'Cek Akses Menu</button>';
   }
   return html;
 }
@@ -2423,14 +2439,14 @@ function viewProsesTahunBaru(){
     + '</p>';
 
   if(!state.confirmingTahunBaru){
-    html += '<button type="button" class="btn btn-warning" '+act('konfirmasiTahunBaru')+'>'+ICONS.pencil+'Proses Copy Data Tahun Baru</button>';
+    html += '<button type="button" class="btn btn-warning" '+act('konfirmasiTahunBaru')+'>'+'Proses Copy Data Tahun Baru</button>';
   } else {
     html += '<div class="alert alert-warning py-2 px-3" style="font-size:13.5px;">'
       + 'Ringkasan: <strong>'+preview.willKeep.length+' PTK</strong> akan tetap ada di Data PTK Tahun Anggaran '+(parseInt(state.tahunAnggaran,10)+1)+', '
       + '<strong>'+preview.willDrop.length+' PTK</strong> lainnya tidak akan ikut terbawa.'
       + '</div>'
-      + '<button type="button" class="btn btn-danger" '+act('prosesTahunBaruClick')+'>'+ICONS.check+'Ya, Proses Sekarang</button> '
-      + '<button type="button" class="btn btn-secondary" '+act('batalTahunBaru')+'>'+ICONS.x+'Batal</button>';
+      + '<button type="button" class="btn btn-danger" '+act('prosesTahunBaruClick')+'>'+'Ya, Proses Sekarang</button> '
+      + '<button type="button" class="btn btn-secondary" '+act('batalTahunBaru')+'>'+'Batal</button>';
   }
   html += '</div></div>';
 
@@ -2476,17 +2492,17 @@ function viewProfilSR(){
       + srField('Alamat Sekretariat SR','srAlamatSekretariat',d.alamat_sekretariat_sr)
       + '<div class="row g-3 mb-3">' + imageUploadField('Logo Sub Rayon', 'logo_sub_rayon', d.logo_sub_rayon, false) + '</div>'
       + '<small class="text-muted d-block mb-3">Logo ini akan tampil otomatis di halaman login dan pojok kiri atas sidebar. Satu Nama Sub Rayon = satu Ketua, otomatis berlaku untuk semua kecamatan di bawahnya (tidak perlu isi ulang per kecamatan).</small>'
-      + '<button type="button" class="btn btn-primary" '+act('saveSRClick')+'>'+ICONS.check+'Simpan</button> '
-      + '<button type="button" class="btn btn-secondary" '+act('cancelSR')+'>'+ICONS.x+'Batal</button>'
+      + '<button type="button" class="btn btn-primary" '+act('saveSRClick')+'>'+'Simpan</button> '
+      + '<button type="button" class="btn btn-secondary" '+act('cancelSR')+'>'+'Batal</button>'
       + '</div></div>';
   }
-  let html = isSuper ? '<div class="mb-3"><button class="btn btn-primary" '+act('editSR',['new'])+'>'+'<img src="'+TAMBAH_DATA_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Tambah Data"/>'+'Tambah Sub Rayon</button></div>' : '<p class="text-muted small">Menu ini bersifat hanya-lihat untuk Admin. Hubungi Superadmin untuk perubahan data Sub Rayon.</p>';
+  let html = isSuper ? '<div class="mb-3"><button class="btn btn-primary" '+act('editSR',['new'])+'>'+'Tambah Sub Rayon</button></div>' : '<p class="text-muted small">Menu ini bersifat hanya-lihat untuk Admin. Hubungi Superadmin untuk perubahan data Sub Rayon.</p>';
   html += '<div class="card"><div class="card-body"><div class="table-responsive table-scroll"><table class="table table-hover align-middle">'
     + '<thead><tr><th>No</th><th>Nama Sub Rayon</th><th>Kecamatan yang Tercakup</th><th>Ketua SR</th><th>NIP Ketua</th><th>Sekretariat</th>'+(isSuper?'<th class="text-center">Aksi</th>':'')+'</tr></thead><tbody>'
     + list.map(function(sr, i){
         const daftarKec = kecamatanUntukSubRayon(sr.nama_sub_rayon);
         return '<tr><td>'+(i+1)+'</td><td>'+esc(sr.nama_sub_rayon)+'</td><td class="small">'+esc(daftarKec.join(', '))+'</td><td>'+esc(sr.nama_ketua_sr)+'</td><td>'+esc(sr.nip_ketua_sr)+'</td><td>'+esc(sr.unit_sekretariat_sr)+'</td>'
-          + (isSuper ? '<td class="text-center"><button class="btn btn-sm btn-outline-primary" '+act('editSR',[sr.id])+'>'+ICONS.pencil+'</button></td>' : '')
+          + (isSuper ? '<td class="text-center"><button class="btn btn-sm btn-outline-primary" '+act('editSR',[sr.id])+'>'+'Edit</button></td>' : '')
           + '</tr>';
       }).join('')
     + '</tbody></table></div></div></div>';
@@ -2678,8 +2694,8 @@ function viewDataSekolah(){
       + imageUploadField('Logo Pemda', 'logo_pemda', d.logo_pemda, false)
       + '</div>'
       + (editing ? '' : '<small class="text-muted d-block mb-3">Semua field selain NPSN & Nama Sekolah boleh dilengkapi belakangan langsung di tabel.</small>')
-      + '<button type="button" class="btn btn-primary" '+act('saveSekolahClick')+'>'+ICONS.check+'Simpan</button> '
-      + '<button type="button" class="btn btn-secondary" '+act('cancelSekolah')+'>'+ICONS.x+'Batal</button>'
+      + '<button type="button" class="btn btn-primary" '+act('saveSekolahClick')+'>'+'Simpan</button> '
+      + '<button type="button" class="btn btn-secondary" '+act('cancelSekolah')+'>'+'Batal</button>'
       + '</div></div>';
   }
   return viewDataSekolahInline();
@@ -2868,8 +2884,8 @@ function viewDataOperator(){
         + imageUploadField('Foto OPS (2x3)', 'foto_ops', d.foto_ops, false)
         + pdfUploadField(d.jabatan==='Bendahara/Admin BOSP' ? 'Upload SK Bendahara (PDF, maks. 1MB)' : 'Upload SK Operator / SK Bendahara (PDF, maks. 1MB)', 'sk_ops_bendahara', d.sk_ops_bendahara, false)
         + '<small class="text-muted d-block mb-3 mt-2">Foto OPS otomatis dipotong rasio 2x3. Upload SK harus format PDF, maksimal 1MB.</small>'
-        + '<button type="button" class="btn btn-primary" '+act('saveOperatorClick')+'>'+ICONS.check+'Simpan</button> '
-        + '<button type="button" class="btn btn-secondary" '+act('cancelOperator')+'>'+ICONS.x+'Batal</button>'
+        + '<button type="button" class="btn btn-primary" '+act('saveOperatorClick')+'>'+'Simpan</button> '
+        + '<button type="button" class="btn btn-secondary" '+act('cancelOperator')+'>'+'Batal</button>'
         + '</div></div>';
     }
     return '<div class="card" style="max-width:650px;"><div class="card-body">'
@@ -2879,8 +2895,8 @@ function viewDataOperator(){
       + '<div class="col-md-6"><label class="form-label">Jabatan <span class="text-danger">*</span></label><select class="form-select" id="opJabatan"><option value="">-- Pilih --</option><option>Operator Dapodik</option><option>Bendahara/Admin BOSP</option><option>Admin OP Aset</option></select></div>'
       + '</div>'
       + '<small class="text-muted d-block mb-3">Field lain (NIP, Tempat/Tgl Lahir, No WhatsApp, Alamat, dll.) boleh dilengkapi belakangan langsung di tabel.</small>'
-      + '<button type="button" class="btn btn-primary" '+act('saveOperatorClick')+'>'+ICONS.check+'Simpan</button> '
-      + '<button type="button" class="btn btn-secondary" '+act('cancelOperator')+'>'+ICONS.x+'Batal</button>'
+      + '<button type="button" class="btn btn-primary" '+act('saveOperatorClick')+'>'+'Simpan</button> '
+      + '<button type="button" class="btn btn-secondary" '+act('cancelOperator')+'>'+'Batal</button>'
       + '</div></div>';
   }
   return viewDataOperatorInline();
@@ -3013,7 +3029,7 @@ function tableWrap(headers, rows, zoomKey, pdfActionName){
   if(zoomKey){
     const zoom = state[zoomKey] || 100;
     toolbar = '<div class="d-flex align-items-center gap-2 mb-2 flex-wrap">'
-      + (pdfActionName ? '<button class="btn btn-outline-danger btn-sm" '+act(pdfActionName)+'>'+ICONS.download+'Unduh PDF</button>' : '')
+      + (pdfActionName ? '<button class="btn btn-outline-danger btn-sm" '+act(pdfActionName)+'>'+'Unduh PDF</button>' : '')
       + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('genericZoomOut',[zoomKey])+'><img src="'+ZOOM_OUT_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Zoom Out"/> Zoom Out</button>'
       + '<span class="text-muted small">'+zoom+'%</span>'
       + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('genericZoomIn',[zoomKey])+'><img src="'+ZOOM_IN_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Zoom In"/> Zoom In</button>'
@@ -3037,7 +3053,7 @@ function currentTriwulan(){
 
 function copyBtn(type, tw){
   if(tw<2) return '';
-  return '<button type="button" class="btn btn-outline-secondary btn-sm mb-3" '+act('salinTriwulan',[type, tw])+'>'+ICONS.download+'Salin data dari Triwulan '+(tw-1)+'</button>';
+  return '<button type="button" class="btn btn-outline-secondary btn-sm mb-3" '+act('salinTriwulan',[type, tw])+'>'+'Salin data dari Triwulan '+(tw-1)+'</button>';
 }
 
 function viewLampiranTriwulan(type, tw){
@@ -3061,8 +3077,8 @@ function viewLampiran2a(tw){
       + '<div class="col-md-6"><label class="form-label">Gaji Pokok</label><input class="form-control" id="f2a_gaji" data-on-input="fmtGaji" value="'+rupiah(editingRec.gaji_pokok)+'"/></div>'
       + '<div class="col-md-6"><label class="form-label">NPWP</label><input class="form-control" id="f2a_npwp" value="'+esc(editingRec.npwp)+'"/></div>'
       + '</div>'
-      + '<button type="button" class="btn btn-primary" '+act('simpan2a')+'>'+ICONS.check+'Simpan Perubahan</button> '
-      + '<button type="button" class="btn btn-secondary" '+act('cancelEditLampiran',['2a'])+'>'+ICONS.x+'Batal</button>'
+      + '<button type="button" class="btn btn-primary" '+act('simpan2a')+'>'+'Simpan Perubahan</button> '
+      + '<button type="button" class="btn btn-secondary" '+act('cancelEditLampiran',['2a'])+'>'+'Batal</button>'
       + '</div></div>';
   } else {
     const p = state.selectedPtk2a;
@@ -3081,7 +3097,7 @@ function viewLampiran2a(tw){
       + readonlyField('Gaji Pokok', p?rupiah(p.gaji_pokok):'')
       + readonlyField('NPWP', p?p.npwp:'')
       + '</div>'
-      + '<button type="button" class="btn btn-primary" '+act('simpan2a')+' '+(!p?'disabled':'')+'>'+ICONS.check+'Simpan</button>'
+      + '<button type="button" class="btn btn-primary" '+act('simpan2a')+' '+(!p?'disabled':'')+'>'+'Simpan</button>'
       + '</div></div>';
   }
 
@@ -3091,8 +3107,8 @@ function viewLampiran2a(tw){
     .map(function(d, i){
     return '<tr><td>'+(i+1)+'</td><td>'+d.nrg+'</td><td>'+d.nuptk+'</td><td>'+esc(d.nama_ptk)+'</td><td>'+esc(d.status_kepegawaian)+'</td><td>'+esc(d.nama_sekolah)+'</td><td>'+rupiah(d.gaji_pokok)+'</td><td>'+d.npwp+'</td>'
       + '<td class="text-center">'+viewDataButtonHtml('lampiran2a', d.id)
-      + '<button class="btn btn-sm btn-outline-primary" '+act('editLampiran',['2a', d.id])+'>'+ICONS.pencil+'</button> '
-      + '<button class="btn btn-sm btn-outline-danger" '+act('hapus',['2a', d.id])+'>'+ICONS.trash+'</button>'
+      + '<button class="btn btn-sm btn-outline-primary" '+act('editLampiran',['2a', d.id])+'>'+'Edit</button> '
+      + '<button class="btn btn-sm btn-outline-danger" '+act('hapus',['2a', d.id])+'>'+'Hapus</button>'
       + '</td></tr>';
   });
   return formHtml + filterSekolahBox('filterSekolahLamp2a') + tableWrap(['No','NRG','NUPTK','Nama PTK','Status Kepegawaian','Nama Sekolah','Gaji Pokok','NPWP'], rows, 'zoomLampiran2a', 'unduhLampiran2aPdf');
@@ -3112,8 +3128,8 @@ function viewLampiran2b(tw){
       + '<div class="col-md-6"><label class="form-label">TMT</label><input type="date" class="form-control" id="f2b_tmt" value="'+esc(editingRec.tmt)+'"/></div>'
       + '<div class="col-md-6"><label class="form-label">Keterangan</label><input class="form-control" id="f2b_ket" value="'+esc(editingRec.keterangan)+'"/></div>'
       + '</div>'
-      + '<button type="button" class="btn btn-primary" '+act('simpan2b')+'>'+ICONS.check+'Simpan Perubahan</button> '
-      + '<button type="button" class="btn btn-secondary" '+act('cancelEditLampiran',['2b'])+'>'+ICONS.x+'Batal</button>'
+      + '<button type="button" class="btn btn-primary" '+act('simpan2b')+'>'+'Simpan Perubahan</button> '
+      + '<button type="button" class="btn btn-secondary" '+act('cancelEditLampiran',['2b'])+'>'+'Batal</button>'
       + '</div></div>';
   } else {
     const p = state.selectedPtk2b;
@@ -3131,7 +3147,7 @@ function viewLampiran2b(tw){
       + '<div class="col-md-6"><label class="form-label">TMT <span class="text-danger">*</span></label><input type="date" class="form-control" id="tmt2b"/></div>'
       + '<div class="col-md-6"><label class="form-label">Keterangan <span class="text-danger">*</span></label><input class="form-control" id="ket2b"/></div>'
       + '</div>'
-      + '<button type="button" class="btn btn-primary" '+act('simpan2b')+' '+(!p?'disabled':'')+'>'+ICONS.check+'Simpan</button>'
+      + '<button type="button" class="btn btn-primary" '+act('simpan2b')+' '+(!p?'disabled':'')+'>'+'Simpan</button>'
       + '</div></div>';
   }
 
@@ -3141,8 +3157,8 @@ function viewLampiran2b(tw){
     .map(function(d, i){
     return '<tr><td>'+(i+1)+'</td><td>'+d.nrg+'</td><td>'+d.nuptk+'</td><td>'+esc(d.nama_ptk)+'</td><td>'+esc(d.nama_sekolah)+'</td><td>'+fmtTgl(d.tmt)+'</td><td>'+esc(d.keterangan)+'</td>'
       + '<td class="text-center">'+viewDataButtonHtml('lampiran2b', d.id)
-      + '<button class="btn btn-sm btn-outline-primary" '+act('editLampiran',['2b', d.id])+'>'+ICONS.pencil+'</button> '
-      + '<button class="btn btn-sm btn-outline-danger" '+act('hapus',['2b', d.id])+'>'+ICONS.trash+'</button>'
+      + '<button class="btn btn-sm btn-outline-primary" '+act('editLampiran',['2b', d.id])+'>'+'Edit</button> '
+      + '<button class="btn btn-sm btn-outline-danger" '+act('hapus',['2b', d.id])+'>'+'Hapus</button>'
       + '</td></tr>';
   });
   return formHtml + filterSekolahBox('filterSekolahLamp2b') + tableWrap(['No','NRG','NUPTK','Nama PTK','Nama Sekolah','TMT','Keterangan'], rows, 'zoomLampiran2b', 'unduhLampiran2bPdf');
@@ -3169,8 +3185,8 @@ function viewLampiran2c(tw){
       + '<div class="col-md-6"><label class="form-label">Gaji Pokok Baru</label><input class="form-control" id="f2c_gb" data-on-input="fmtGaji" value="'+rupiah(editingRec.gaji_pokok_baru)+'"/></div>'
       + '<div class="col-12"><label class="form-label">Keterangan</label><input class="form-control" id="f2c_ket" value="'+esc(editingRec.keterangan)+'"/></div>'
       + '</div>'
-      + '<button type="button" class="btn btn-primary" '+act('simpan2c')+'>'+ICONS.check+'Simpan Perubahan</button> '
-      + '<button type="button" class="btn btn-secondary" '+act('cancelEditLampiran',['2c'])+'>'+ICONS.x+'Batal</button>'
+      + '<button type="button" class="btn btn-primary" '+act('simpan2c')+'>'+'Simpan Perubahan</button> '
+      + '<button type="button" class="btn btn-secondary" '+act('cancelEditLampiran',['2c'])+'>'+'Batal</button>'
       + '</div></div>';
   } else {
     const p = state.selectedPtk2c;
@@ -3192,7 +3208,7 @@ function viewLampiran2c(tw){
       + '<div class="col-md-6"><label class="form-label">Gaji Pokok Lama <span class="text-danger">*</span></label><input class="form-control" id="gl2c" data-on-input="fmtGaji" placeholder="Rp 0"/></div>'
       + '<div class="col-md-6"><label class="form-label">Gaji Pokok Baru <span class="text-danger">*</span></label><input class="form-control" id="gb2c" data-on-input="fmtGaji" placeholder="Rp 0"/></div>'
       + '</div>'
-      + '<button type="button" class="btn btn-primary" '+act('simpan2c')+' '+(!p?'disabled':'')+'>'+ICONS.check+'Simpan</button>'
+      + '<button type="button" class="btn btn-primary" '+act('simpan2c')+' '+(!p?'disabled':'')+'>'+'Simpan</button>'
       + '</div></div>';
   }
 
@@ -3202,8 +3218,8 @@ function viewLampiran2c(tw){
     .map(function(d, i){
     return '<tr><td>'+(i+1)+'</td><td>'+d.nrg+'</td><td>'+esc(d.nama_ptk)+'</td><td>'+namaSekolah(d.tempat_tugas)+'</td><td>'+esc(d.jenis_kenaikan)+'</td><td>'+esc(d.golongan_dimiliki)+'</td><td>'+esc(d.masa_kerja_dimiliki)+'</td><td>'+esc(d.pangkat_berkala_baru)+'</td><td>'+fmtTgl(d.tmt_sk_terbaru)+'</td><td>'+rupiah(d.gaji_pokok_lama)+'</td><td>'+rupiah(d.gaji_pokok_baru)+'</td>'
       + '<td class="text-center">'+viewDataButtonHtml('lampiran2c', d.id)
-      + '<button class="btn btn-sm btn-outline-primary" '+act('editLampiran',['2c', d.id])+'>'+ICONS.pencil+'</button> '
-      + '<button class="btn btn-sm btn-outline-danger" '+act('hapus',['2c', d.id])+'>'+ICONS.trash+'</button>'
+      + '<button class="btn btn-sm btn-outline-primary" '+act('editLampiran',['2c', d.id])+'>'+'Edit</button> '
+      + '<button class="btn btn-sm btn-outline-danger" '+act('hapus',['2c', d.id])+'>'+'Hapus</button>'
       + '</td></tr>';
   });
   return formHtml + filterSekolahBox('filterSekolahLamp2c') + tableWrap(['No','NRG','Nama PTK','Tempat Tugas','Jenis Kenaikan','Golongan','Masa Kerja','Pangkat/Berkala Baru','TMT SK Terbaru','Gaji Lama','Gaji Baru'], rows, 'zoomLampiran2c', 'unduhLampiran2cPdf');
@@ -3453,12 +3469,12 @@ function viewSuratRekom2a(tw){
   const hasEdited = !!state.editedSuratMap[editKey];
 
   html += '<div class="mb-3 d-flex gap-2 flex-wrap">'
-    + '<button class="btn btn-primary btn-sm" '+act('simpanNomorSurat',['rekom2a', sekolah.npsn, tw])+'>'+ICONS.check+'Simpan Nomor Surat</button>'
-    + '<button class="btn btn-outline-secondary btn-sm" '+act('cetakSurat')+'>'+ICONS.download+'Cetak</button>'
+    + '<button class="btn btn-primary btn-sm" '+act('simpanNomorSurat',['rekom2a', sekolah.npsn, tw])+'>'+'Simpan Nomor Surat</button>'
+    + '<button class="btn btn-outline-secondary btn-sm" '+act('cetakSurat')+'>'+'Cetak</button>'
     + paperSizeSelector()
     + '<div class="small text-muted" style="width:100%;">Tips cetak: pada dialog print browser, matikan opsi "Headers and footers" / "Header dan footer" supaya hasil cetak bersih tanpa tanggal, judul, atau URL.</div>' 
-    + '<button class="btn '+(isEditing?'btn-success':'btn-outline-primary')+' btn-sm" '+act('toggleEditSurat',[editKey,'suratArea'])+'>'+ICONS.pencil+(isEditing?'Selesai & Simpan Perubahan':'Edit Isi Surat')+'</button>'
-    + (hasEdited?'<button class="btn btn-outline-danger btn-sm" '+act('resetSurat',[editKey])+'>'+ICONS.x+'Reset ke Format Asli</button>':'')
+    + '<button class="btn '+(isEditing?'btn-success':'btn-outline-primary')+' btn-sm" '+act('toggleEditSurat',[editKey,'suratArea'])+'>'+(isEditing?'Selesai & Simpan Perubahan':'Edit Isi Surat')+'</button>'
+    + (hasEdited?'<button class="btn btn-outline-danger btn-sm" '+act('resetSurat',[editKey])+'>'+'Reset ke Format Asli</button>':'')
     + '</div>';
   if(isEditing) html += '<div class="alert alert-warning py-2 px-3 mb-3" style="font-size:12.5px;max-width:800px;">Mode edit aktif — klik langsung di dalam surat untuk mengubah teks/tata letak, lalu klik "Selesai & Simpan Perubahan".</div>';
   if(isEditing) html += editToolbar();
@@ -3532,12 +3548,12 @@ function viewSuratPenghentian(tw){
   const hasEdited = !!state.editedSuratMap[editKey];
 
   html += '<div class="mb-3 d-flex gap-2 flex-wrap">'
-    + '<button class="btn btn-primary btn-sm" '+act('simpanNomorSurat',['penghentian', sekolah.npsn, tw])+'>'+ICONS.check+'Simpan Nomor Surat</button>'
-    + '<button class="btn btn-outline-secondary btn-sm" '+act('cetakSurat')+'>'+ICONS.download+'Cetak</button>'
+    + '<button class="btn btn-primary btn-sm" '+act('simpanNomorSurat',['penghentian', sekolah.npsn, tw])+'>'+'Simpan Nomor Surat</button>'
+    + '<button class="btn btn-outline-secondary btn-sm" '+act('cetakSurat')+'>'+'Cetak</button>'
     + paperSizeSelector()
     + '<div class="small text-muted" style="width:100%;">Tips cetak: pada dialog print browser, matikan opsi "Headers and footers" / "Header dan footer" supaya hasil cetak bersih tanpa tanggal, judul, atau URL.</div>' 
-    + '<button class="btn '+(isEditing?'btn-success':'btn-outline-primary')+' btn-sm" '+act('toggleEditSurat',[editKey,'suratPenghentianArea'])+'>'+ICONS.pencil+(isEditing?'Selesai & Simpan Perubahan':'Edit Isi Surat')+'</button>'
-    + (hasEdited?'<button class="btn btn-outline-danger btn-sm" '+act('resetSurat',[editKey])+'>'+ICONS.x+'Reset ke Format Asli</button>':'')
+    + '<button class="btn '+(isEditing?'btn-success':'btn-outline-primary')+' btn-sm" '+act('toggleEditSurat',[editKey,'suratPenghentianArea'])+'>'+(isEditing?'Selesai & Simpan Perubahan':'Edit Isi Surat')+'</button>'
+    + (hasEdited?'<button class="btn btn-outline-danger btn-sm" '+act('resetSurat',[editKey])+'>'+'Reset ke Format Asli</button>':'')
     + '</div>';
   if(isEditing) html += '<div class="alert alert-warning py-2 px-3 mb-3" style="font-size:12.5px;max-width:800px;">Mode edit aktif — klik langsung di dalam surat untuk mengubah teks/tata letak, lalu klik "Selesai & Simpan Perubahan".</div>';
   if(isEditing) html += editToolbar();
@@ -3618,11 +3634,11 @@ function viewSuratPernyataan(tw){
   const hasEdited = !!state.editedSuratMap[editKey];
 
   html += '<div class="mb-3 d-flex gap-2 flex-wrap">'
-    + '<button class="btn btn-outline-secondary btn-sm" '+act('cetakSurat')+'>'+ICONS.download+'Cetak</button>'
+    + '<button class="btn btn-outline-secondary btn-sm" '+act('cetakSurat')+'>'+'Cetak</button>'
     + paperSizeSelector()
     + '<div class="small text-muted" style="width:100%;">Tips cetak: pada dialog print browser, matikan opsi "Headers and footers" / "Header dan footer" supaya hasil cetak bersih tanpa tanggal, judul, atau URL.</div>' 
-    + '<button class="btn '+(isEditing?'btn-success':'btn-outline-primary')+' btn-sm" '+act('toggleEditSurat',[editKey,'suratPernyataanArea'])+'>'+ICONS.pencil+(isEditing?'Selesai & Simpan Perubahan':'Edit Isi Surat')+'</button>'
-    + (hasEdited?'<button class="btn btn-outline-danger btn-sm" '+act('resetSurat',[editKey])+'>'+ICONS.x+'Reset ke Format Asli</button>':'')
+    + '<button class="btn '+(isEditing?'btn-success':'btn-outline-primary')+' btn-sm" '+act('toggleEditSurat',[editKey,'suratPernyataanArea'])+'>'+(isEditing?'Selesai & Simpan Perubahan':'Edit Isi Surat')+'</button>'
+    + (hasEdited?'<button class="btn btn-outline-danger btn-sm" '+act('resetSurat',[editKey])+'>'+'Reset ke Format Asli</button>':'')
     + '</div>';
   if(isEditing) html += '<div class="alert alert-warning py-2 px-3 mb-3" style="font-size:12.5px;max-width:800px;">Mode edit aktif — klik langsung di dalam surat untuk mengubah teks/tata letak, lalu klik "Selesai & Simpan Perubahan".</div>';
   if(isEditing) html += editToolbar();
@@ -3788,15 +3804,15 @@ function viewHapusData(){
     + '</select></div>';
 
   html += '<div class="mb-3 d-flex align-items-center gap-2 flex-wrap">'
-    + '<button type="button" class="btn btn-outline-warning btn-sm" '+act('hapusSementaraSemuaTrash')+'>'+ICONS.check+'Hapus Sementara Semua (Terpilih)</button>'
-    + '<button type="button" class="btn btn-outline-danger btn-sm" '+act('hapusPermanenSemuaTrash')+'>'+ICONS.trash+'Hapus Permanen Semua (Terpilih)</button>'
+    + '<button type="button" class="btn btn-outline-warning btn-sm" '+act('hapusSementaraSemuaTrash')+'>'+'Hapus Sementara Semua (Terpilih)</button>'
+    + '<button type="button" class="btn btn-outline-danger btn-sm" '+act('hapusPermanenSemuaTrash')+'>'+'Hapus Permanen Semua (Terpilih)</button>'
     + '<span class="text-muted small">'+selected.length+' data terpilih</span>'
     + '</div>';
 
   const zoomTrash = state.zoomHapusData || 100;
   html += '<div class="d-flex align-items-center gap-2 mb-2 flex-wrap">'
-    + '<button class="btn btn-outline-success btn-sm" '+act('unduhHapusDataExcel')+'>'+ICONS.download+'Unduh Excel</button>'
-    + '<button class="btn btn-outline-danger btn-sm" '+act('unduhHapusDataPdf')+'>'+ICONS.download+'Unduh PDF</button>'
+    + '<button class="btn btn-outline-success btn-sm" '+act('unduhHapusDataExcel')+'>'+'Unduh Excel</button>'
+    + '<button class="btn btn-outline-danger btn-sm" '+act('unduhHapusDataPdf')+'>'+'Unduh PDF</button>'
     + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('genericZoomOut',['zoomHapusData'])+'><img src="'+ZOOM_OUT_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Zoom Out"/> Zoom Out</button>'
     + '<span class="text-muted small">'+zoomTrash+'%</span>'
     + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('genericZoomIn',['zoomHapusData'])+'><img src="'+ZOOM_IN_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Zoom In"/> Zoom In</button>'
@@ -3815,8 +3831,8 @@ function viewHapusData(){
     return '<tr><td><input type="checkbox" data-change-action="toggleTrashSelectOne" data-change-arg="'+t.id+'"'+(isChecked?' checked':'')+'/></td><td>'+esc(t.label)+'</td><td>'+TRASH_TYPE_LABELS[t.sourceType]+'</td><td>'+(t.reason?esc(t.reason):'<span class="text-muted">-</span>')+'</td>'
       + '<td>'+fmtTgl(t.deletedAt)+'</td><td>'+statusBadge+'</td><td>'+(t.permanent?'<span class="text-muted">-</span>':fmtTgl(cutoff))+'</td>'
       + '<td class="text-center">'
-      + (!t.permanent ? '<button class="btn btn-sm btn-outline-success" '+act('restoreFromTrash',[t.id])+' title="Pulihkan">'+ICONS.check+'</button> ' : '')
-      + '<button class="btn btn-sm btn-outline-danger" '+act('permanentDeleteTrash',[t.id])+' title="Hapus Permanen">'+ICONS.trash+'</button>'
+      + (!t.permanent ? '<button class="btn btn-sm btn-outline-success" '+act('restoreFromTrash',[t.id])+' title="Pulihkan">'+'OK</button> ' : '')
+      + '<button class="btn btn-sm btn-outline-danger" '+act('permanentDeleteTrash',[t.id])+' title="Hapus Permanen">'+'Hapus</button>'
       + '</td></tr>';
   }).join('');
 
@@ -3833,7 +3849,7 @@ function viewBackupRestore(){
     + 'File backup mencakup <strong>Data Tahun berjalan (Tahun Anggaran '+esc(state.tahunAnggaran)+')</strong> beserta <strong>seluruh arsip Data Tahun sebelumnya</strong>'
     + (totalTahunArsip>0 ? ' (saat ini ada '+totalTahunArsip+' tahun arsip tersimpan).' : ' (saat ini belum ada arsip tahun sebelumnya).')
     + '</p>'
-    + '<button type="button" class="btn btn-primary" '+act('backupDataClick')+'>'+ICONS.download+'Backup Sekarang</button>'
+    + '<button type="button" class="btn btn-primary" '+act('backupDataClick')+'>'+'Backup Sekarang</button>'
     + '</div></div>';
 
   html += '<div class="card" style="max-width:700px;"><div class="card-body">'
@@ -3844,7 +3860,7 @@ function viewBackupRestore(){
     + '</p>';
 
   if(!state.confirmingRestore){
-    html += '<button type="button" class="btn btn-outline-danger" '+act('pilihFileRestore')+'>'+ICONS.upload+'Pilih File Backup untuk Restore</button>';
+    html += '<button type="button" class="btn btn-outline-danger" '+act('pilihFileRestore')+'>'+'Pilih File Backup untuk Restore</button>';
   } else {
     const d = state.restorePendingData || {};
     const jmlPtk = (d.ptkList||[]).length;
@@ -3854,8 +3870,8 @@ function viewBackupRestore(){
       + 'Berisi Tahun Anggaran <strong>'+esc(d.tahunAnggaran||'-')+'</strong> dengan <strong>'+jmlPtk+' PTK</strong> aktif dan <strong>'+jmlArsip+' tahun arsip</strong>.<br>'
       + '<strong>Data yang ada sekarang di aplikasi akan sepenuhnya digantikan dan tidak bisa dikembalikan lagi.</strong>'
       + '</div>'
-      + '<button type="button" class="btn btn-danger" '+act('konfirmasiRestoreClick')+'>'+ICONS.check+'Ya, Restore Sekarang</button> '
-      + '<button type="button" class="btn btn-secondary" '+act('batalRestore')+'>'+ICONS.x+'Batal</button>';
+      + '<button type="button" class="btn btn-danger" '+act('konfirmasiRestoreClick')+'>'+'Ya, Restore Sekarang</button> '
+      + '<button type="button" class="btn btn-secondary" '+act('batalRestore')+'>'+'Batal</button>';
   }
   html += '</div></div>';
   return html;
@@ -3943,8 +3959,8 @@ function viewRegistrasiForm(){
     + '<div class="mb-3"><label class="form-label">Nama Admin BOSP</label><input class="form-control" id="regNamaAdminBosp" placeholder="Nama Admin BOSP yang menaungi" disabled/></div>'
     + '<div class="mb-3"><label class="form-label">Username <span class="text-muted small">(otomatis terisi dari NPSN)</span></label><input class="form-control" id="regUsername" placeholder="Isi NPSN terlebih dahulu" readonly/></div>'
     + '<div class="mb-3"><label class="form-label">Password <span class="text-danger">*</span></label><input type="password" class="form-control" id="regPassword" placeholder="minimal 6 karakter/angka"/></div>'
-    + '<button type="button" class="btn btn-primary" '+act('simpanRegistrasi')+'>'+ICONS.check+'Simpan Registrasi</button> '
-    + '<button type="button" class="btn btn-secondary" '+act('tutupRegistrasi')+'>'+ICONS.x+'Batal</button>'
+    + '<button type="button" class="btn btn-primary" '+act('simpanRegistrasi')+'>'+'Simpan Registrasi</button> '
+    + '<button type="button" class="btn btn-secondary" '+act('tutupRegistrasi')+'>'+'Batal</button>'
     + '</div></div>';
 }
 
@@ -3959,7 +3975,7 @@ function viewRegistrasiFormCompact(){
     + '<div class="mb-2"><label class="form-label small mb-1">Nama Admin BOSP</label><input class="form-control form-control-sm" id="regNamaAdminBosp" placeholder="Nama Admin BOSP yang menaungi" disabled/></div>'
     + '<div class="mb-2"><label class="form-label small mb-1">Username <span class="text-muted" style="font-size:10px;">(otomatis dari NPSN)</span></label><input class="form-control form-control-sm" id="regUsername" placeholder="Isi NPSN dulu" readonly/></div>'
     + '<div class="mb-2"><label class="form-label small mb-1">Password</label><input type="password" class="form-control form-control-sm" id="regPassword" placeholder="minimal 6 karakter/angka"/></div>'
-    + '<button type="button" class="btn btn-primary btn-sm w-100 mb-2" '+act('simpanRegistrasi')+'>'+ICONS.check+'Simpan Registrasi</button>'
+    + '<button type="button" class="btn btn-primary btn-sm w-100 mb-2" '+act('simpanRegistrasi')+'>'+'Simpan Registrasi</button>'
     + '<button type="button" class="btn btn-outline-secondary btn-sm w-100" '+act('tutupRegistrasi')+'>Batal, Kembali ke Login</button>'
     + '</div>';
 }
@@ -4026,7 +4042,7 @@ function passwordCellHtml(){
 
 function viewAksesSuperadminTab(){
   let html = '<div class="mb-3 d-flex gap-2">'
-    + '<button class="btn btn-primary" '+act('editSuperadminAccount',['new'])+'>'+'<img src="'+TAMBAH_DATA_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Tambah Data"/>'+'Tambah Superadmin</button>'
+    + '<button class="btn btn-primary" '+act('editSuperadminAccount',['new'])+'>'+'Tambah Superadmin</button>'
     + '</div>';
 
   if(state.editingSuperadminAccount!==null){
@@ -4039,9 +4055,9 @@ function viewAksesSuperadminTab(){
       + '<div class="mb-3"><label class="form-label">Username <span class="text-danger">*</span></label><input class="form-control" id="saUsername" value="'+esc(d.username)+'"/></div>'
       + '<div class="mb-3"><label class="form-label">Password <span class="text-danger">*</span></label>'
       + '<div class="input-group"><input type="'+(showPw?'text':'password')+'" class="form-control" id="saPassword" value="'+esc(d.password)+'" placeholder="minimal 6 karakter/angka"/>'
-      + '<button class="btn btn-outline-secondary" type="button" '+act('toggleShowPasswordSuperadmin')+'>'+(showPw?ICONS.eyeOff:ICONS.eye)+'</button></div></div>'
-      + '<button type="button" class="btn btn-primary" '+act('simpanAksesSuperadmin')+'>'+ICONS.check+'Simpan</button> '
-      + '<button type="button" class="btn btn-secondary" '+act('cancelSuperadminAccount')+'>'+ICONS.x+'Batal</button>'
+      + '<button class="btn btn-outline-secondary" type="button" '+act('toggleShowPasswordSuperadmin')+'>'+(showPw?'Sembunyikan':'Lihat')+'</button></div></div>'
+      + '<button type="button" class="btn btn-primary" '+act('simpanAksesSuperadmin')+'>'+'Simpan</button> '
+      + '<button type="button" class="btn btn-secondary" '+act('cancelSuperadminAccount')+'>'+'Batal</button>'
       + '</div></div>';
   }
 
@@ -4050,8 +4066,8 @@ function viewAksesSuperadminTab(){
   html += superadminAccounts.length===0 ? '<tr><td colspan="6" class="text-center text-muted py-4">Belum ada data.</td></tr>' : superadminAccounts.map(function(a,i){
     return '<tr><td>'+(i+1)+'</td><td>'+esc(a.nama)+'</td><td>'+esc(a.level_akses)+'</td><td>'+esc(a.username)+'</td>'
       + '<td>'+passwordCellHtml()+'</td>'
-      + '<td class="text-center"><button class="btn btn-sm btn-outline-primary" '+act('editSuperadminAccount',[a.id])+'>'+ICONS.pencil+'</button> '
-      + '<button class="btn btn-sm btn-outline-danger" '+act('hapusSuperadminAccount',[a.id])+'>'+ICONS.trash+'</button></td></tr>';
+      + '<td class="text-center"><button class="btn btn-sm btn-outline-primary" '+act('editSuperadminAccount',[a.id])+'>'+'Edit</button> '
+      + '<button class="btn btn-sm btn-outline-danger" '+act('hapusSuperadminAccount',[a.id])+'>'+'Hapus</button></td></tr>';
   }).join('');
   html += '</tbody></table></div></div></div>';
   return html;
@@ -4096,8 +4112,8 @@ async function hapusSuperadminAccount(id){
 
 function viewAksesAdminTab(){
   let html = '<div class="mb-3 d-flex gap-2">'
-    + '<button class="btn btn-primary" '+act('editAdminAccount',['new'])+'>'+'<img src="'+TAMBAH_DATA_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Tambah Data"/>'+'Tambah Admin</button>'
-    + '<button class="btn btn-outline-warning" '+act('bukaRegistrasi')+'>'+ICONS.plus+'Registrasi Sekolah &amp; Admin Baru</button>'
+    + '<button class="btn btn-primary" '+act('editAdminAccount',['new'])+'>'+'Tambah Admin</button>'
+    + '<button class="btn btn-outline-warning" '+act('bukaRegistrasi')+'>'+'Registrasi Sekolah &amp; Admin Baru</button>'
     + '<button class="btn btn-outline-success" '+act('exportAdminAccountsExcel')+'>'+'<img src="'+EXPORT_EXCEL_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Export Excel"/>Export Excel</button>'
     + '<button class="btn btn-outline-secondary" '+act('notifExportImport')+'>'+'<img src="'+IMPORT_EXCEL_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Import Excel"/>Import Excel</button>'
     + '</div>';
@@ -4117,9 +4133,9 @@ function viewAksesAdminTab(){
       + '<div class="mb-3"><label class="form-label">Username <span class="text-danger">*</span></label><input class="form-control" id="aaUsername" value="'+esc(d.username)+'"/></div>'
       + '<div class="mb-3"><label class="form-label">Password <span class="text-danger">*</span></label>'
       + '<div class="input-group"><input type="'+(showPw?'text':'password')+'" class="form-control" id="aaPassword" value="'+esc(editing?d.password:(d.password||''))+'" placeholder="minimal 6 karakter/angka"/>'
-      + '<button class="btn btn-outline-secondary" type="button" '+act('toggleShowPasswordAdminForm')+'>'+(showPw?ICONS.eyeOff:ICONS.eye)+'</button></div></div>'
-      + '<button type="button" class="btn btn-primary" '+act('saveAdminAccountClick')+'>'+ICONS.check+'Simpan</button> '
-      + '<button type="button" class="btn btn-secondary" '+act('cancelAdminAccount')+'>'+ICONS.x+'Batal</button>'
+      + '<button class="btn btn-outline-secondary" type="button" '+act('toggleShowPasswordAdminForm')+'>'+(showPw?'Sembunyikan':'Lihat')+'</button></div></div>'
+      + '<button type="button" class="btn btn-primary" '+act('saveAdminAccountClick')+'>'+'Simpan</button> '
+      + '<button type="button" class="btn btn-secondary" '+act('cancelAdminAccount')+'>'+'Batal</button>'
       + '</div></div>';
   }
 
@@ -4129,9 +4145,9 @@ function viewAksesAdminTab(){
     const sr = subRayons.find(function(s){return s.id===a.sub_rayon_id;});
     return '<tr><td>'+(i+1)+'</td><td>'+esc(a.nama)+'</td><td>'+esc(a.level_admin)+'</td><td>'+esc(a.jabatan)+'</td><td>'+(sr?esc(sr.nama_sub_rayon):'-')+'</td><td>'+esc(a.username)+'</td>'
       + '<td>'+passwordCellHtml()+'</td>'
-      + '<td class="text-center"><button class="btn btn-sm btn-outline-primary" '+act('editAdminAccount',[a.id])+'>'+ICONS.pencil+'</button> '
+      + '<td class="text-center"><button class="btn btn-sm btn-outline-primary" '+act('editAdminAccount',[a.id])+'>'+'Edit</button> '
       + '<button class="btn btn-sm btn-outline-warning" title="Reset ke Default" '+act('resetPasswordDefault',[a.username])+'>&#8635;</button> '
-      + '<button class="btn btn-sm btn-outline-danger" '+act('hapusAdminAccount',[a.id])+'>'+ICONS.trash+'</button></td></tr>';
+      + '<button class="btn btn-sm btn-outline-danger" '+act('hapusAdminAccount',[a.id])+'>'+'Hapus</button></td></tr>';
   }).join('');
   html += '</tbody></table></div></div></div>';
   return html;
@@ -4210,11 +4226,11 @@ function viewUserManual(){
       + (fileReady ? '<div class="text-success small mt-1">File siap: '+esc(tempFiles.user_manual_pdf_name)+' ('+tempFiles.user_manual_pdf_size+' KB)</div>'
           : (editing && d.file_name ? '<div class="text-muted small mt-1">File saat ini: '+esc(d.file_name)+' ('+d.file_size_kb+' KB) — biarkan kosong jika tidak ingin mengganti.</div>' : ''))
       + '</div>'
-      + '<button type="button" class="btn btn-primary" '+act('saveUserManualClick')+'>'+ICONS.check+'Simpan</button> '
-      + '<button type="button" class="btn btn-secondary" '+act('cancelUserManual')+'>'+ICONS.x+'Batal</button>'
+      + '<button type="button" class="btn btn-primary" '+act('saveUserManualClick')+'>'+'Simpan</button> '
+      + '<button type="button" class="btn btn-secondary" '+act('cancelUserManual')+'>'+'Batal</button>'
       + '</div></div>';
   } else {
-    html += isSuper ? '<div class="mb-3"><button class="btn btn-primary" '+act('editUserManual',['new'])+'>'+'<img src="'+TAMBAH_DATA_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Tambah Data"/>'+'Tambah User Manual</button></div>' : '<p class="text-muted small">Menu ini bersifat hanya-lihat. Hubungi Superadmin untuk menambah/mengubah User Manual.</p>';
+    html += isSuper ? '<div class="mb-3"><button class="btn btn-primary" '+act('editUserManual',['new'])+'>'+'Tambah User Manual</button></div>' : '<p class="text-muted small">Menu ini bersifat hanya-lihat. Hubungi Superadmin untuk menambah/mengubah User Manual.</p>';
   }
   html += '<div class="card"><div class="card-body"><div class="table-responsive table-scroll"><table class="table table-hover align-middle">'
     + '<thead><tr><th>No</th><th>Nama Book Manual</th><th>Tanggal Upload</th><th>Ukuran File</th><th class="text-center">Aksi</th></tr></thead><tbody>';
@@ -4222,9 +4238,9 @@ function viewUserManual(){
   html += sorted.length===0 ? '<tr><td colspan="5" class="text-center text-muted py-4">Belum ada data.</td></tr>' : sorted.map(function(m,i){
     return '<tr><td>'+(i+1)+'</td><td>'+esc(m.nama_manual)+'</td><td>'+fmtTgl(m.tanggal_upload)+'</td><td>'+m.file_size_kb+' KB</td>'
       + '<td class="text-center">'
-      + '<button class="btn btn-sm btn-outline-success" '+act('lihatUserManual',[m.id])+'>'+ICONS.eye+' Lihat</button> '
-      + (isSuper ? '<button class="btn btn-sm btn-outline-primary" '+act('editUserManual',[m.id])+'>'+ICONS.pencil+'</button> '
-          + '<button class="btn btn-sm btn-outline-danger" '+act('hapusUserManual',[m.id])+'>'+ICONS.trash+'</button>' : '')
+      + '<button class="btn btn-sm btn-outline-success" '+act('lihatUserManual',[m.id])+'>'+' Lihat</button> '
+      + (isSuper ? '<button class="btn btn-sm btn-outline-primary" '+act('editUserManual',[m.id])+'>'+'Edit</button> '
+          + '<button class="btn btn-sm btn-outline-danger" '+act('hapusUserManual',[m.id])+'>'+'Hapus</button>' : '')
       + '</td></tr>';
   }).join('');
   html += '</tbody></table></div></div></div>'
@@ -4379,8 +4395,8 @@ function viewBkuTriwulan(tw){
       + '<div class="col-md-6"><label class="form-label">Penerimaan / Kredit</label><input class="form-control" id="bkuPenerimaan" data-on-input="fmtGaji" value="'+(d.penerimaan?rupiah(d.penerimaan):'')+'" placeholder="Rp 0"/></div>'
       + '<div class="col-md-6"><label class="form-label">Pengeluaran / Debit</label><input class="form-control" id="bkuPengeluaran" data-on-input="fmtGaji" value="'+(d.pengeluaran?rupiah(d.pengeluaran):'')+'" placeholder="Rp 0"/></div>'
       + '</div>'
-      + '<button type="button" class="btn btn-primary" '+act('saveBkuClick',[tw])+'>'+ICONS.check+'Simpan</button> '
-      + '<button type="button" class="btn btn-secondary" '+act('cancelBkuForm')+'>'+ICONS.x+'Batal</button>'
+      + '<button type="button" class="btn btn-primary" '+act('saveBkuClick',[tw])+'>'+'Simpan</button> '
+      + '<button type="button" class="btn btn-secondary" '+act('cancelBkuForm')+'>'+'Batal</button>'
       + '</div></div>';
   }
 
@@ -4408,7 +4424,7 @@ function viewBkuTriwulan(tw){
     + '<input class="form-control form-control-sm" id="bkuSaldoAkhirBankInput" value="'+rupiah(kas.akhirBank)+'" data-on-input="fmtBkuSaldoKas:'+key+':akhirBank:bkuSaldoAkhirBankInput"/>'
     + '</div></div></div>'
     + '</div>';
-  html += '<div class="mb-3"><button class="btn btn-primary" '+act('editBku',[tw, 'new'])+'>'+'<img src="'+TAMBAH_DATA_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Tambah Data"/>'+'Tambah Transaksi</button></div>';
+  html += '<div class="mb-3"><button class="btn btn-primary" '+act('editBku',[tw, 'new'])+'>'+'Tambah Transaksi</button></div>';
 
   const totalPenerimaan = withSaldo.reduce(function(s,x){return s+(x.penerimaan||0);}, 0);
   const totalPengeluaran = withSaldo.reduce(function(s,x){return s+(x.pengeluaran||0);}, 0);
@@ -4422,8 +4438,8 @@ function viewBkuTriwulan(tw){
       + '<td class="text-end">'+(x.penerimaan?rupiah(x.penerimaan):'-')+'</td><td class="text-end">'+(x.pengeluaran?rupiah(x.pengeluaran):'-')+'</td><td class="text-end fw-bold">'+rupiah(x.saldo)+'</td>'
       + '<td class="text-end text-muted">-</td><td class="text-end text-muted">-</td>'
       + '<td><button type="button" class="btn btn-sm '+(x.verifikasi_kategori?'btn-success':'btn-outline-secondary')+'" '+act('bukaVerifikasiBku',[tw, x.id])+'>'+(x.verifikasi_kategori?esc(x.verifikasi_kategori):'Verifikasi')+'</button></td>'
-      + '<td class="text-center"><button class="btn btn-sm btn-outline-primary" '+act('editBku',[tw, x.id])+'>'+ICONS.pencil+'</button> '
-      + '<button class="btn btn-sm btn-outline-danger" '+act('hapusBku',[x.id])+'>'+ICONS.trash+'</button></td></tr>';
+      + '<td class="text-center"><button class="btn btn-sm btn-outline-primary" '+act('editBku',[tw, x.id])+'>'+'Edit</button> '
+      + '<button class="btn btn-sm btn-outline-danger" '+act('hapusBku',[x.id])+'>'+'Hapus</button></td></tr>';
   }).join('');
   if(withSaldo.length===0){
     html += '<tr><td colspan="13" class="text-center text-muted py-3">Belum ada transaksi.</td></tr>';
@@ -4643,7 +4659,7 @@ function viewSimpleKategoriInline(kode, tw, judul, uraianLabel, jumlahLabel){
   const penerimaanScoped = state.user.role==='superadmin' ? penerimaanBospList : penerimaanBospList.filter(function(x){return x.input_by===state.user.username;});
   const zoom = state.lpjBospZoom || 100;
   let html = exportImportButtonsHtml(kode, tw)
-    + '<div class="mb-3"><button class="btn btn-primary" '+act('tambahBarisSimpleKategori',[kode, tw])+'>'+'<img src="'+TAMBAH_DATA_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Tambah Data"/>'+'Tambah Baris</button></div>';
+    + '<div class="mb-3"><button class="btn btn-primary" '+act('tambahBarisSimpleKategori',[kode, tw])+'>'+'Tambah Baris</button></div>';
   const total = list.reduce(function(s,x){return s+(x.jumlah||0);}, 0);
   const npsnOptionsHtml = '<option value="">-- Pilih --</option>' + penerimaanScoped.map(function(x){return '<option value="'+x.npsn+'">'+esc(x.nama_sekolah)+' ('+x.npsn+')</option>';}).join('');
   html += '<div class="card"><div class="card-body"><div class="table-responsive table-scroll" style="zoom:'+zoom+'%;"><table class="table table-hover align-middle bosp-table" style="font-size:12px;">'
@@ -4659,7 +4675,7 @@ function viewSimpleKategoriInline(kode, tw, judul, uraianLabel, jumlahLabel){
       + '<td><input type="text" class="form-control form-control-sm text-end bosp-inline-paste-cell" style="min-width:100px;" value="'+(x.harga_satuan?angkaSaja(x.harga_satuan):'')+'" placeholder="0" data-change-action="simpanBospSimpleSel" data-change-arg="'+x.id+':harga_satuan" data-paste-kategori="'+kode+'" data-paste-tw="'+tw+'" data-paste-field="harga_satuan" data-paste-row-id="'+x.id+'"/></td>'
       + '<td class="text-end fw-bold">'+rupiah(x.jumlah)+'</td>'
       + '<td><input type="date" class="form-control form-control-sm bosp-inline-paste-cell" style="min-width:130px;" value="'+esc(x.tanggal||'')+'" data-change-action="simpanBospSimpleSel" data-change-arg="'+x.id+':tanggal" data-paste-kategori="'+kode+'" data-paste-tw="'+tw+'" data-paste-field="tanggal" data-paste-row-id="'+x.id+'"/></td>'
-      + '<td class="text-center"><button class="btn btn-sm btn-outline-danger" '+act('hapusBosp',[x.id])+'>'+ICONS.trash+'</button></td></tr>';
+      + '<td class="text-center"><button class="btn btn-sm btn-outline-danger" '+act('hapusBosp',[x.id])+'>'+'Hapus</button></td></tr>';
   }).join('');
   if(list.length>0){
     html += '<tr class="fw-bold border-top"><td colspan="7" class="text-end">Total</td><td class="text-end">'+rupiah(total)+'</td><td colspan="2"></td></tr>';
@@ -4764,7 +4780,7 @@ function viewBarangKategoriInline(kode, tw, judul, totalHargaLabel){
   const penerimaanScoped = state.user.role==='superadmin' ? penerimaanBospList : penerimaanBospList.filter(function(x){return x.input_by===state.user.username;});
   const zoom = state.lpjBospZoom || 100;
   let html = exportImportButtonsHtml(kode, tw)
-    + '<div class="mb-3"><button class="btn btn-primary" '+act('tambahBarisBarangKategori',[kode, tw])+'>'+'<img src="'+TAMBAH_DATA_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Tambah Data"/>'+'Tambah Baris</button></div>';
+    + '<div class="mb-3"><button class="btn btn-primary" '+act('tambahBarisBarangKategori',[kode, tw])+'>'+'Tambah Baris</button></div>';
   const total = list.reduce(function(s,x){return s+(x.jumlah||0);}, 0);
   const npsnOptionsHtml = '<option value="">-- Pilih --</option>' + penerimaanScoped.map(function(x){return '<option value="'+x.npsn+'">'+esc(x.nama_sekolah)+' ('+x.npsn+')</option>';}).join('');
   const asalUsulOptionsHtml = '<option value="">-- Pilih --</option>' + ASAL_USUL_OPTIONS_INLINE.map(function(o){return '<option value="'+o+'">'+o+'</option>';}).join('');
@@ -4785,7 +4801,7 @@ function viewBarangKategoriInline(kode, tw, judul, totalHargaLabel){
       + '<td><select class="form-select form-select-sm bosp-inline-paste-cell" style="min-width:110px;" data-change-action="simpanBospBarangSel" data-change-arg="'+x.id+':asal_usul" data-paste-kategori="'+kode+'" data-paste-tw="'+tw+'" data-paste-field="asal_usul" data-paste-row-id="'+x.id+'">'+asalUsulOptionsHtml.replace('value="'+x.asal_usul+'"','value="'+x.asal_usul+'" selected')+'</select></td>'
       + '<td><input type="date" class="form-control form-control-sm bosp-inline-paste-cell" style="min-width:130px;" value="'+esc(x.tanggal||'')+'" data-change-action="simpanBospBarangSel" data-change-arg="'+x.id+':tanggal" data-paste-kategori="'+kode+'" data-paste-tw="'+tw+'" data-paste-field="tanggal" data-paste-row-id="'+x.id+'"/></td>'
       + '<td><input type="text" class="form-control form-control-sm bosp-inline-paste-cell" style="min-width:120px;" value="'+esc(x.keterangan||'')+'" data-change-action="simpanBospBarangSel" data-change-arg="'+x.id+':keterangan" data-paste-kategori="'+kode+'" data-paste-tw="'+tw+'" data-paste-field="keterangan" data-paste-row-id="'+x.id+'"/></td>'
-      + '<td class="text-center"><button class="btn btn-sm btn-outline-danger" '+act('hapusBosp',[x.id])+'>'+ICONS.trash+'</button></td></tr>';
+      + '<td class="text-center"><button class="btn btn-sm btn-outline-danger" '+act('hapusBosp',[x.id])+'>'+'Hapus</button></td></tr>';
   }).join('');
   if(list.length>0){ html += '<tr class="fw-bold border-top"><td colspan="9" class="text-end">Total</td><td class="text-end">'+rupiah(total)+'</td><td colspan="3"></td></tr>'; }
   html += '</tbody></table></div></div></div>'
@@ -4901,7 +4917,7 @@ function viewJasaPendidikTendikInline(tw){
   const penerimaanScoped = state.user.role==='superadmin' ? penerimaanBospList : penerimaanBospList.filter(function(x){return x.input_by===state.user.username;});
   const zoom = state.lpjBospZoom || 100;
   let html = exportImportButtonsHtml('jasa_pendidik_tendik', tw)
-    + '<div class="mb-3"><button class="btn btn-primary" '+act('tambahBarisJasaPendidik',[tw])+'>'+'<img src="'+TAMBAH_DATA_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Tambah Data"/>'+'Tambah Baris</button></div>';
+    + '<div class="mb-3"><button class="btn btn-primary" '+act('tambahBarisJasaPendidik',[tw])+'>'+'Tambah Baris</button></div>';
   const total = list.reduce(function(s,x){return s+(x.jumlah||0);}, 0);
   const npsnOptionsHtml = '<option value="">-- Pilih --</option>' + penerimaanScoped.map(function(x){return '<option value="'+x.npsn+'">'+esc(x.nama_sekolah)+' ('+x.npsn+')</option>';}).join('');
   const satuanOptionsHtml = '<option value="">-- Pilih --</option><option>Orang/Jam</option><option>Orang/Bulan</option>';
@@ -4921,7 +4937,7 @@ function viewJasaPendidikTendikInline(tw){
       + '<td><input type="text" class="form-control form-control-sm text-end bosp-inline-paste-cell" style="min-width:100px;" value="'+(x.harga_satuan?angkaSaja(x.harga_satuan):'')+'" placeholder="0" data-change-action="simpanBospJasaPendidikSel" data-change-arg="'+x.id+':harga_satuan" data-paste-kategori="jasa_pendidik_tendik" data-paste-tw="'+tw+'" data-paste-field="harga_satuan" data-paste-row-id="'+x.id+'"/></td>'
       + '<td class="text-end fw-bold">'+rupiah(x.jumlah)+'</td>'
       + '<td><input type="date" class="form-control form-control-sm bosp-inline-paste-cell" style="min-width:130px;" value="'+esc(x.tanggal||'')+'" data-change-action="simpanBospJasaPendidikSel" data-change-arg="'+x.id+':tanggal" data-paste-kategori="jasa_pendidik_tendik" data-paste-tw="'+tw+'" data-paste-field="tanggal" data-paste-row-id="'+x.id+'"/></td>'
-      + '<td class="text-center"><button class="btn btn-sm btn-outline-danger" '+act('hapusBosp',[x.id])+'>'+ICONS.trash+'</button></td></tr>';
+      + '<td class="text-center"><button class="btn btn-sm btn-outline-danger" '+act('hapusBosp',[x.id])+'>'+'Hapus</button></td></tr>';
   }).join('');
   if(list.length>0){
     html += '<tr class="fw-bold border-top"><td colspan="8" class="text-end">Total</td><td class="text-end">'+rupiah(total)+'</td><td colspan="2"></td></tr>';
@@ -5019,11 +5035,11 @@ function viewDataSertifikasiInline(){
   const zoomSert = state.dataSertifikasiZoom || 100;
   const ptkScoped = ptkTersimpanSaja();
   let html = '<div class="mb-3 d-flex align-items-center gap-2 flex-wrap">'
-    + '<button class="btn btn-primary" '+act('tambahBarisSertifikasi')+'>'+'<img src="'+TAMBAH_DATA_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Tambah Data"/>'+'Tambah Baris</button>'
+    + '<button class="btn btn-primary" '+act('tambahBarisSertifikasi')+'>'+'Tambah Baris</button>'
     + '<button class="btn btn-outline-success" '+act('notifExportImport')+'>'+'<img src="'+EXPORT_EXCEL_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Export Excel"/>Export Excel</button>'
     + '<button class="btn btn-outline-secondary" '+act('notifExportImport')+'>'+'<img src="'+IMPORT_EXCEL_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Import Excel"/>Import Excel</button>'
-    + '<button class="btn btn-outline-success" '+act('unduhDataSertifikasiExcel')+'>'+ICONS.download+'Unduh Excel</button>'
-    + '<button class="btn btn-outline-danger" '+act('unduhDataSertifikasiPdf')+'>'+ICONS.download+'Unduh PDF</button>'
+    + '<button class="btn btn-outline-success" '+act('unduhDataSertifikasiExcel')+'>'+'Unduh Excel</button>'
+    + '<button class="btn btn-outline-danger" '+act('unduhDataSertifikasiPdf')+'>'+'Unduh PDF</button>'
     + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('dataSertifikasiZoomOut')+'><img src="'+ZOOM_OUT_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Zoom Out"/> Zoom Out</button>'
     + '<span class="text-muted small">'+zoomSert+'%</span>'
     + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('dataSertifikasiZoomIn')+'><img src="'+ZOOM_IN_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Zoom In"/> Zoom In</button>'
@@ -5047,7 +5063,7 @@ function viewDataSertifikasiInline(){
       + opsInlineTextCell('sertifikasi', s.id, 'nama_universitas', s.nama_universitas, 160)
       + opsInlineTextCell('sertifikasi', s.id, 'tahun_sertifikasi', s.tahun_sertifikasi, 70)
       + '<td><select class="form-select form-select-sm ops-inline-paste-cell" style="min-width:150px;" data-change-action="simpanOpsInlineSel" data-change-arg="sertifikasi:'+s.id+':naungan" data-paste-source="sertifikasi" data-paste-field="naungan" data-paste-row-id="'+s.id+'">'+naunganOptionsHtml.replace('>'+s.naungan+'<',' selected>'+s.naungan+'<')+'</select></td>'
-      + '<td class="text-center">'+viewDataButtonHtml('sertifikasi', s.id)+'<button class="btn btn-sm btn-outline-danger" '+act('hapusSertifikasi',[s.id])+'>'+ICONS.trash+'</button></td></tr>';
+      + '<td class="text-center">'+viewDataButtonHtml('sertifikasi', s.id)+'<button class="btn btn-sm btn-outline-danger" '+act('hapusSertifikasi',[s.id])+'>'+'Hapus</button></td></tr>';
   }).join('');
   html += '</tbody></table></div></div></div>'
     + '<div class="text-muted small mt-2">Klik "Tambah Baris" lalu ketik/pilih langsung, atau copy 1 kolom data dari Excel dan paste (Ctrl+V) mulai dari baris pertama pada kolom tujuan.</div>';
@@ -5145,11 +5161,11 @@ function viewDataPtkInline(){
   }
   const zoomPtk = state.dataPtkZoom || 100;
   html += '<div class="mb-3 d-flex align-items-center gap-2 flex-wrap">'
-    + '<button class="btn btn-primary" '+act('tambahBarisPtk')+' '+(historical?'disabled':'')+'>'+'<img src="'+TAMBAH_DATA_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Tambah Data"/>'+'Tambah Baris</button>'
+    + '<button class="btn btn-primary" '+act('tambahBarisPtk')+' '+(historical?'disabled':'')+'>'+'Tambah Baris</button>'
     + '<button class="btn btn-outline-success" '+act('notifExportImport')+'>'+'<img src="'+EXPORT_EXCEL_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Export Excel"/>Export Excel</button>'
     + '<button class="btn btn-outline-secondary" '+act('notifExportImport')+'>'+'<img src="'+IMPORT_EXCEL_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Import Excel"/>Import Excel</button>'
-    + '<button class="btn btn-outline-success" '+act('unduhDataPtkExcel')+'>'+ICONS.download+'Unduh Excel</button>'
-    + '<button class="btn btn-outline-danger" '+act('unduhDataPtkPdf')+'>'+ICONS.download+'Unduh PDF</button>'
+    + '<button class="btn btn-outline-success" '+act('unduhDataPtkExcel')+'>'+'Unduh Excel</button>'
+    + '<button class="btn btn-outline-danger" '+act('unduhDataPtkPdf')+'>'+'Unduh PDF</button>'
     + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('dataPtkZoomOut')+'><img src="'+ZOOM_OUT_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Zoom Out"/> Zoom Out</button>'
     + '<span class="text-muted small">'+zoomPtk+'%</span>'
     + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('dataPtkZoomIn')+'><img src="'+ZOOM_IN_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Zoom In"/> Zoom In</button>'
@@ -5195,7 +5211,7 @@ function viewDataPtkInline(){
       + ptkInlineSelectCell(id, 'alasan_tidak_aktif', p.alasan_tidak_aktif, ALASAN_TIDAK_AKTIF_OPTIONS, 150)
       + ptkInlineSelectCell(id, 'jabatan_tugas_tambahan', p.jabatan_tugas_tambahan, JABATAN_TUGAS_TAMBAHAN_OPTIONS, 150)
       + '<td class="text-center">'+viewDataButtonHtml('ptk', p.nrg)
-      + (historical?'':'<button class="btn btn-sm btn-outline-danger" '+act('hapusPtk',[p.nrg])+'>'+ICONS.trash+'</button>')
+      + (historical?'':'<button class="btn btn-sm btn-outline-danger" '+act('hapusPtk',[p.nrg])+'>'+'Hapus</button>')
       + '</td></tr>';
   }).join('');
   html += '</tbody></table></div></div></div>'
@@ -5427,10 +5443,10 @@ function viewDataSekolahInline(){
   let list = listSekolahTertampil();
   const zoomSk = state.dataSekolahZoom || 100;
   let html = '<div class="mb-3 d-flex align-items-center gap-2 flex-wrap">'
-    + '<button class="btn btn-primary" '+act('tambahBarisSekolah')+'>'+'<img src="'+TAMBAH_DATA_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Tambah Data"/>'+'Tambah Baris</button>'
+    + '<button class="btn btn-primary" '+act('tambahBarisSekolah')+'>'+'Tambah Baris</button>'
     + '<button class="btn btn-outline-success" '+act('exportDataSekolahExcel')+'>'+'<img src="'+EXPORT_EXCEL_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Export Excel"/>Export Excel</button>'
     + '<button class="btn btn-outline-secondary" '+act('importDataSekolahClick')+'>'+'<img src="'+IMPORT_EXCEL_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Import Excel"/>Import Excel</button>'
-    + '<button class="btn btn-outline-dark" '+act('cetakDataSekolah')+'>'+ICONS.download+'Cetak (Sesuai Filter)</button>'
+    + '<button class="btn btn-outline-dark" '+act('cetakDataSekolah')+'>'+'Cetak (Sesuai Filter)</button>'
     + '<select class="form-select form-select-sm" style="max-width:180px;" data-change-action="setDataSekolahFilterNama"><option value="">Semua Nama Sekolah</option>'
     + list.map(function(s){return '<option value="'+esc(s.nama_sekolah)+'"'+(s.nama_sekolah===(state.dataSekolahFilterNama||'')?' selected':'')+'>'+esc(s.nama_sekolah)+'</option>';}).join('')
     + '</select>'
@@ -5470,8 +5486,8 @@ function viewDataSekolahInline(){
       + opsInlineTextCell('sekolah', id, 'nama_pemda', sk.nama_pemda, 160)
       + opsInlineTextCell('sekolah', id, 'website_sekolah', sk.website_sekolah, 130)
       + opsInlineTextCell('sekolah', id, 'email_sekolah', sk.email_sekolah, 150)
-      + '<td class="text-center">'+viewDataButtonHtml('sekolah', sk.npsn)+'<button class="btn btn-sm btn-outline-primary" '+act('editSekolah',[sk.npsn])+'>'+ICONS.pencil+'</button> '
-      + '<button class="btn btn-sm btn-outline-danger" '+act('hapusSekolah',[sk.npsn])+'>'+ICONS.trash+'</button></td></tr>';
+      + '<td class="text-center">'+viewDataButtonHtml('sekolah', sk.npsn)+'<button class="btn btn-sm btn-outline-primary" '+act('editSekolah',[sk.npsn])+'>'+'Edit</button> '
+      + '<button class="btn btn-sm btn-outline-danger" '+act('hapusSekolah',[sk.npsn])+'>'+'Hapus</button></td></tr>';
   }).join('');
   html += '</tbody></table></div></div></div>'
     + '<div class="text-muted small mt-2">Terurut otomatis: Status (Negeri lalu Swasta) &rarr; Nama Sekolah &rarr; Kecamatan. Klik "Tambah Baris" lalu ketik/pilih langsung, atau copy 1 kolom data dari Excel dan paste (Ctrl+V) mulai dari baris pertama pada kolom tujuan. Untuk mengunggah Logo Sekolah/Pemda, gunakan tombol edit (pensil). Tabel menggulir vertikal (menampilkan sekitar 10 baris) dan horizontal.</div>';
@@ -5565,11 +5581,11 @@ function viewDataOperatorInline(){
   const zoomOp = state.dataOperatorZoom || 100;
   let html = '<h6 class="fw-bold text-center mb-3">DATA OPERATOR SEKOLAH / BENDAHARA / ADMIN BOSP — '+esc(namaSubRayonUser().toUpperCase())+'</h6>';
   html += '<div class="mb-3 d-flex align-items-center gap-2 flex-wrap">'
-    + '<button class="btn btn-primary" '+act('tambahBarisOperator')+'>'+'<img src="'+TAMBAH_DATA_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Tambah Data"/>'+'Tambah Baris</button>'
+    + '<button class="btn btn-primary" '+act('tambahBarisOperator')+'>'+'Tambah Baris</button>'
     + '<button class="btn btn-outline-success" '+act('exportDataOperatorExcel')+'>'+'<img src="'+EXPORT_EXCEL_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Export Excel"/>Export Excel</button>'
     + '<button class="btn btn-outline-secondary" '+act('importDataOperatorClick')+'>'+'<img src="'+IMPORT_EXCEL_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Import Excel"/>Import Excel</button>'
-    + '<button class="btn btn-outline-success" '+act('unduhDataOperatorExcel')+'>'+ICONS.download+'Unduh Excel</button>'
-    + '<button class="btn btn-outline-danger" '+act('unduhDataOperatorPdf')+'>'+ICONS.download+'Unduh PDF</button>'
+    + '<button class="btn btn-outline-success" '+act('unduhDataOperatorExcel')+'>'+'Unduh Excel</button>'
+    + '<button class="btn btn-outline-danger" '+act('unduhDataOperatorPdf')+'>'+'Unduh PDF</button>'
     + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('dataOperatorZoomOut')+'><img src="'+ZOOM_OUT_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Zoom Out"/> Zoom Out</button>'
     + '<span class="text-muted small">'+zoomOp+'%</span>'
     + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('dataOperatorZoomIn')+'><img src="'+ZOOM_IN_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Zoom In"/> Zoom In</button>'
@@ -5596,8 +5612,8 @@ function viewDataOperatorInline(){
       + opsInlineTextCell('operator', o.id, 'no_whatsapp', o.no_whatsapp, 120)
       + opsInlineTextCell('operator', o.id, 'alamat_rumah', o.alamat_rumah, 180)
       + '<td>'+(o.sk_ops_bendahara?'<span class="badge bg-success">Ada</span>':'<span class="badge bg-secondary">-</span>')+'</td>'
-      + '<td class="text-center">'+viewDataButtonHtml('operator', o.id)+'<button class="btn btn-sm btn-outline-primary" '+act('editOperator',[o.id])+'>'+ICONS.pencil+'</button> '
-      + '<button class="btn btn-sm btn-outline-danger" '+act('hapusOperator',[o.id])+'>'+ICONS.trash+'</button></td></tr>';
+      + '<td class="text-center">'+viewDataButtonHtml('operator', o.id)+'<button class="btn btn-sm btn-outline-primary" '+act('editOperator',[o.id])+'>'+'Edit</button> '
+      + '<button class="btn btn-sm btn-outline-danger" '+act('hapusOperator',[o.id])+'>'+'Hapus</button></td></tr>';
   }).join('');
   html += '</tbody></table></div></div></div>'
     + '<div class="text-muted small mt-2">Klik "Tambah Baris" lalu ketik/pilih langsung, atau copy 1 kolom data dari Excel dan paste (Ctrl+V) mulai dari baris pertama pada kolom tujuan. Untuk mengunggah Foto/SK, gunakan tombol edit (pensil).</div>';
@@ -5676,8 +5692,8 @@ function viewPenerimaanBosp(){
       + '<div class="col-md-6"><label class="form-label">Saldo Kas Tunai Triwulan 4</label><input class="form-control bg-light" id="pbKasTunai4" value="'+(d.kas_tunai4!==undefined?rupiah(d.kas_tunai4):'Rp 0')+'" readonly/></div>'
       + '</div>'
       + '<hr/>'
-      + '<button type="button" class="btn btn-primary px-4" '+act('savePenerimaanBospClick')+'>'+ICONS.check+'Simpan</button> '
-      + '<button type="button" class="btn btn-outline-secondary px-4" '+act('cancelPenerimaanBosp')+'>'+ICONS.x+'Batal</button>'
+      + '<button type="button" class="btn btn-primary px-4" '+act('savePenerimaanBospClick')+'>'+'Simpan</button> '
+      + '<button type="button" class="btn btn-outline-secondary px-4" '+act('cancelPenerimaanBosp')+'>'+'Batal</button>'
       + '</div></div>';
   }
 
@@ -5694,7 +5710,7 @@ function viewPenerimaanBosp(){
     + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('lpjBospZoomIn')+'>'+'<img src="'+ZOOM_IN_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Zoom In"/> Zoom In</button>'
     + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('lpjBospZoomReset')+'><img src="'+RESET_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Reset"/>Reset</button>'
     + '</div>'
-    + '<div class="mb-3"><button class="btn btn-primary" '+act('editPenerimaanBosp',['new'])+'>'+'<img src="'+TAMBAH_DATA_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Tambah Data"/>'+'Tambah Penerimaan BOSP</button></div>'
+    + '<div class="mb-3"><button class="btn btn-primary" '+act('editPenerimaanBosp',['new'])+'>'+'Tambah Penerimaan BOSP</button></div>'
   html += '<div class="card"><div class="card-body"><div class="table-responsive table-scroll" style="zoom:'+(state.lpjBospZoom||100)+'%;"><table class="table table-hover align-middle bosp-table">'
     + '<thead><tr><th>No</th><th>Kode UPB</th><th>NPSN</th><th>Nama Sekolah</th><th>Kecamatan</th><th>Sub Rayon</th><th>Jumlah Siswa</th><th>Besaran Satuan/Tahun</th><th>Penerimaan 1 Tahun</th><th>Tahap 1</th><th>Tahap 2</th><th>Jumlah</th><th>Tarik Tunai Tw1</th><th>Tarik Tunai Tw2</th><th>Tarik Tunai Tw3</th><th>Tarik Tunai Tw4</th><th>Saldo Kas Di Bank Tw1</th><th>Saldo Kas Tunai Tw1</th><th>Saldo Kas Di Bank Tw2</th><th>Saldo Kas Tunai Tw2</th><th>Saldo Kas Di Bank Tw3</th><th>Saldo Kas Tunai Tw3</th><th>Saldo Kas Di Bank Tw4</th><th>Saldo Kas Tunai Tw4</th><th class="text-center">Aksi</th></tr></thead><tbody>';
   html += list.length===0 ? '<tr><td colspan="25" class="text-center text-muted py-4">Belum ada data.</td></tr>' : list.map(function(x, i){
@@ -5711,8 +5727,8 @@ function viewPenerimaanBosp(){
       + '<td class="text-end">'+rupiah(x.kas_bank3)+'</td><td class="text-end">'+rupiah(kasTunai3Live)+'</td>'
       + '<td class="text-end">'+rupiah(x.kas_bank4)+'</td><td class="text-end">'+rupiah(kasTunai4Live)+'</td>'
       + '<td class="text-center">'
-      + '<button class="btn btn-sm btn-outline-primary" '+act('editPenerimaanBosp',[x.id])+'>'+ICONS.pencil+'</button> '
-      + '<button class="btn btn-sm btn-outline-danger" '+act('hapusPenerimaanBosp',[x.id])+'>'+ICONS.trash+'</button>'
+      + '<button class="btn btn-sm btn-outline-primary" '+act('editPenerimaanBosp',[x.id])+'>'+'Edit</button> '
+      + '<button class="btn btn-sm btn-outline-danger" '+act('hapusPenerimaanBosp',[x.id])+'>'+'Hapus</button>'
       + '</td></tr>';
   }).join('');
   if(list.length>0){
@@ -5966,15 +5982,15 @@ function viewLaporanBpk(tw){
       + '<div class="mb-3"><label class="form-label">Kecamatan <span class="text-muted small">(otomatis dari Penerimaan BOSP)</span></label><input class="form-control bg-light" id="lbpkKecamatan" value="'+esc(d.kecamatan)+'" readonly/></div>'
       + '<div class="mb-3"><label class="form-label">Sub Rayon <span class="text-muted small">(otomatis dari Penerimaan BOSP)</span></label><input class="form-control bg-light" id="lbpkSubRayon" value="'+esc(d.sub_rayon)+'" readonly/></div>'
       + '<div class="mb-3"><label class="form-label">Triwulan</label><input class="form-control" value="Triwulan '+tw+'" disabled/></div>'
-      + '<button type="button" class="btn btn-primary" '+act('saveLaporanBpkClick',[tw])+'>'+ICONS.check+'Simpan</button> '
-      + '<button type="button" class="btn btn-secondary" '+act('cancelLaporanBpk')+'>'+ICONS.x+'Batal</button>'
+      + '<button type="button" class="btn btn-primary" '+act('saveLaporanBpkClick',[tw])+'>'+'Simpan</button> '
+      + '<button type="button" class="btn btn-secondary" '+act('cancelLaporanBpk')+'>'+'Batal</button>'
       + '</div></div>';
   }
 
   const colCount = 20 + LAPORAN_BPK_KATEGORI_MAP.length;
   let html = '';
   html += '<h6 class="fw-bold text-center mb-3">LAPORAN REALISASI BOSP-FORM BPK '+esc(state.tahunAnggaran)+'</h6>';
-  html += lpjBospToolbarHtml() + '<div class="mb-3"><button class="btn btn-primary" '+act('editLaporanBpk',['new'])+'>'+'<img src="'+TAMBAH_DATA_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Tambah Data"/>'+'Tambah Data</button></div>';
+  html += lpjBospToolbarHtml() + '<div class="mb-3"><button class="btn btn-primary" '+act('editLaporanBpk',['new'])+'>'+'Tambah Data</button></div>';
   html += '<div class="card"><div class="card-body"><div class="table-responsive table-scroll" style="zoom:'+(state.lpjBospZoom||100)+'%;"><table class="table table-hover align-middle bosp-table" style="font-size:10.5px;text-transform:none;">'
     + laporanBpkHeaderHtml() + '<tbody>';
   html += list.length===0 ? '<tr><td colspan="'+colCount+'" class="text-center text-muted py-4">Belum ada data.</td></tr>' : list.map(function(x,i){ return laporanBpkRowHtml(x, tw, i+1); }).join('');
@@ -6037,8 +6053,8 @@ function laporanBpkRowHtml(x, tw, no){
     + '<td class="text-end" title="Otomatis dari Saldo Kas Tunai Triwulan '+tw+' pada menu Penerimaan BOSP">'+rupiah(saldoTunai)+'</td>'
     + '<td class="text-end fw-bold">'+rupiah(keteranganSaldo)+'</td>'
     + '<td class="text-center"><span class="badge '+(verifikasiSaldo==='SAMA'?'bg-success':'bg-danger')+'">'+verifikasiSaldo+'</span></td>'
-    + '<td class="text-center"><button class="btn btn-sm btn-outline-primary" '+act('editLaporanBpk',[x.id])+'>'+ICONS.pencil+'</button> '
-    + '<button class="btn btn-sm btn-outline-danger" '+act('hapusLaporanBpk',[x.id])+'>'+ICONS.trash+'</button></td></tr>';
+    + '<td class="text-center"><button class="btn btn-sm btn-outline-primary" '+act('editLaporanBpk',[x.id])+'>'+'Edit</button> '
+    + '<button class="btn btn-sm btn-outline-danger" '+act('hapusLaporanBpk',[x.id])+'>'+'Hapus</button></td></tr>';
 }
 
 function daftarKecamatanUntukFilter(){
@@ -6061,8 +6077,8 @@ function viewLaporanBpkTahunan(){
   html += '<h6 class="fw-bold text-center mb-3">LAPORAN REALISASI BOSP-FORM BPK '+esc(state.tahunAnggaran)+'</h6>';
   html += '<p class="text-muted small">Data ini otomatis diambil dari halaman Laporan Realisasi BOSP-Form BPK Triwulan 1 sampai Triwulan 4, ditampilkan berurutan.</p>';
   html += '<div class="mb-3 d-flex align-items-center gap-2 flex-wrap">'
-    + '<button type="button" class="btn btn-outline-success btn-sm" '+act('unduhLaporanBpkTahunanExcel')+'>'+ICONS.download+'Unduh Excel</button>'
-    + '<button type="button" class="btn btn-outline-danger btn-sm" '+act('unduhLaporanBpkTahunanPdf')+'>'+ICONS.download+'Unduh PDF</button>'
+    + '<button type="button" class="btn btn-outline-success btn-sm" '+act('unduhLaporanBpkTahunanExcel')+'>'+'Unduh Excel</button>'
+    + '<button type="button" class="btn btn-outline-danger btn-sm" '+act('unduhLaporanBpkTahunanPdf')+'>'+'Unduh PDF</button>'
     + '<select class="form-select form-select-sm" style="max-width:200px;" data-change-action="setLbpkFilterSekolah"><option value="">Semua Sekolah</option>'
     + daftarNamaSekolahUntukFilter().map(function(nm){ return '<option value="'+esc(nm)+'"'+(nm===(state.lbpkFilterSekolah||'')?' selected':'')+'>'+esc(nm)+'</option>'; }).join('')
     + '</select>'
@@ -6745,13 +6761,13 @@ function viewBarangKategoriForm(prefix, kode, kodeLabel, tw, editingId, totalHar
     + '<div class="mb-3"><label class="form-label">Asal Usul <span class="text-danger">*</span></label><select class="form-select" id="'+prefix+'AsalUsul"><option value="">-- Pilih --</option><option'+(d.asal_usul==='BOSP/JKN'?' selected':'')+'>BOSP/JKN</option><option'+(d.asal_usul==='BOSP Kinerja'?' selected':'')+'>BOSP Kinerja</option></select></div>'
     + '<div class="mb-3"><label class="form-label">Tanggal Bayar <span class="text-danger">*</span></label><input type="date" class="form-control" id="'+prefix+'TanggalBayar" value="'+esc(d.tanggal||today)+'"/></div>'
     + '<div class="mb-3"><label class="form-label">Keterangan</label><textarea class="form-control" id="'+prefix+'Keterangan" rows="2">'+esc(d.keterangan)+'</textarea></div>'
-    + '<button type="button" class="btn btn-primary" '+act('saveBarangKategoriClick_'+prefix,[tw])+'>'+ICONS.check+'Simpan</button> '
-    + '<button type="button" class="btn btn-secondary" '+act('cancelBarangKategori_'+prefix)+'>'+ICONS.x+'Batal</button>'
+    + '<button type="button" class="btn btn-primary" '+act('saveBarangKategoriClick_'+prefix,[tw])+'>'+'Simpan</button> '
+    + '<button type="button" class="btn btn-secondary" '+act('cancelBarangKategori_'+prefix)+'>'+'Batal</button>'
     + '</div></div>';
 }
 function viewBarangKategoriTable(prefix, kode, tw, judul, totalHargaLabel){
   const list = lpjBospFilterList(scopedBarangKategori(kode, tw));
-  let html = exportImportButtonsHtml(kode, tw) + '<div class="mb-3"><button class="btn btn-primary" '+act('editBarangKategori_'+prefix,['new'])+'>'+'<img src="'+TAMBAH_DATA_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Tambah Data"/>'+'Tambah Data</button></div>';
+  let html = exportImportButtonsHtml(kode, tw) + '<div class="mb-3"><button class="btn btn-primary" '+act('editBarangKategori_'+prefix,['new'])+'>'+'Tambah Data</button></div>';
   const total = list.reduce(function(s,x){return s+(x.jumlah||0);}, 0);
   html += '<div class="card"><div class="card-body"><div class="table-responsive table-scroll" style="zoom:'+(state.lpjBospZoom||100)+'%;"><table class="table table-hover align-middle bosp-table" style="font-size:11.5px;">'
     + '<thead><tr><th colspan="13" class="text-center fw-bold" style="text-transform:none;font-size:14px;border:none !important;">'+esc(judul)+'</th></tr>'
@@ -6760,8 +6776,8 @@ function viewBarangKategoriTable(prefix, kode, tw, judul, totalHargaLabel){
     return '<tr><td>'+(i+1)+'</td><td>'+esc(x.kode_upb||'-')+'</td><td>'+esc(x.npsn||'-')+'</td><td>'+esc(x.nama_sekolah||'-')+'</td><td>'+esc(x.nama_barang)+'</td><td>'+esc(x.merk_barang)+'</td>'
       + '<td class="text-center">'+x.volume+'</td><td>'+esc(x.satuan)+'</td><td class="text-end">'+rupiah(x.harga_satuan)+'</td><td class="text-end fw-bold">'+rupiah(x.jumlah)+'</td>'
       + '<td>'+esc(x.asal_usul)+'</td><td>'+fmtTgl(x.tanggal)+'</td><td>'+esc(x.keterangan||'-')+'</td>'
-      + '<td class="text-center"><button class="btn btn-sm btn-outline-primary" '+act('editBarangKategori_'+prefix,[x.id])+'>'+ICONS.pencil+'</button> '
-      + '<button class="btn btn-sm btn-outline-danger" '+act('hapusBosp',[x.id])+'>'+ICONS.trash+'</button></td></tr>';
+      + '<td class="text-center"><button class="btn btn-sm btn-outline-primary" '+act('editBarangKategori_'+prefix,[x.id])+'>'+'Edit</button> '
+      + '<button class="btn btn-sm btn-outline-danger" '+act('hapusBosp',[x.id])+'>'+'Hapus</button></td></tr>';
   }).join('');
   if(list.length>0){ html += '<tr class="fw-bold border-top"><td colspan="9" class="text-end">Total</td><td class="text-end">'+rupiah(total)+'</td><td colspan="3"></td></tr>'; }
   html += '</tbody></table></div></div></div>';
@@ -6840,20 +6856,20 @@ function viewBospKategori(kategori, tw){
       + '<div class="col-md-4"><label class="form-label">Harga Satuan <span class="text-danger">*</span></label><input class="form-control" id="bospHarga" value="'+(d.harga_satuan?rupiah(d.harga_satuan):'')+'" data-on-input="hitungBosp" placeholder="Rp 0"/></div>'
       + '</div>'
       + '<div class="mb-3"><label class="form-label">Jumlah</label><input class="form-control" id="bospJumlah" value="'+(d.jumlah?rupiah(d.jumlah):'Rp 0')+'" readonly/></div>'
-      + '<button type="button" class="btn btn-primary" '+act('saveBospClick',[kategori, tw])+'>'+ICONS.check+'Simpan</button> '
-      + '<button type="button" class="btn btn-secondary" '+act('cancelBosp')+'>'+ICONS.x+'Batal</button>'
+      + '<button type="button" class="btn btn-primary" '+act('saveBospClick',[kategori, tw])+'>'+'Simpan</button> '
+      + '<button type="button" class="btn btn-secondary" '+act('cancelBosp')+'>'+'Batal</button>'
       + '</div></div>';
   }
 
-  let html = '<div class="mb-3"><button class="btn btn-primary" '+act('editBosp',[kategori, tw, 'new'])+'>'+'<img src="'+TAMBAH_DATA_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Tambah Data"/>'+'Tambah Data</button></div>';
+  let html = '<div class="mb-3"><button class="btn btn-primary" '+act('editBosp',[kategori, tw, 'new'])+'>'+'Tambah Data</button></div>';
   const total = list.reduce(function(s,x){return s+(x.jumlah||0);}, 0);
   html += '<div class="card"><div class="card-body"><div class="table-responsive table-scroll"><table class="table table-hover align-middle">'
     + '<thead><tr><th>No</th><th>Tanggal</th><th>Uraian</th><th>Volume</th><th>Satuan</th><th>Harga Satuan</th><th>Jumlah</th><th class="text-center">Aksi</th></tr></thead><tbody>';
   html += list.length===0 ? '<tr><td colspan="8" class="text-center text-muted py-4">Belum ada data.</td></tr>' : list.map(function(x,i){
     return '<tr><td>'+(i+1)+'</td><td>'+fmtTgl(x.tanggal)+'</td><td>'+esc(x.uraian)+'</td><td class="text-center">'+x.volume+'</td><td>'+esc(x.satuan)+'</td>'
       + '<td class="text-end">'+rupiah(x.harga_satuan)+'</td><td class="text-end">'+rupiah(x.jumlah)+'</td>'
-      + '<td class="text-center"><button class="btn btn-sm btn-outline-primary" '+act('editBosp',[kategori, tw, x.id])+'>'+ICONS.pencil+'</button> '
-      + '<button class="btn btn-sm btn-outline-danger" '+act('hapusBosp',[x.id])+'>'+ICONS.trash+'</button></td></tr>';
+      + '<td class="text-center"><button class="btn btn-sm btn-outline-primary" '+act('editBosp',[kategori, tw, x.id])+'>'+'Edit</button> '
+      + '<button class="btn btn-sm btn-outline-danger" '+act('hapusBosp',[x.id])+'>'+'Hapus</button></td></tr>';
   }).join('');
   if(list.length>0){
     html += '<tr class="fw-bold"><td colspan="6" class="text-end">Total</td><td class="text-end">'+rupiah(total)+'</td><td></td></tr>';
@@ -8000,9 +8016,9 @@ function viewUnduhanLpjBosp(tw){
   let html = '<p class="text-muted small">Unduh laporan LPJ BOSP Triwulan '+tw+' dalam format Excel atau PDF yang sudah rapi, siap cetak, dan sudah dilengkapi kolom tanda tangan Kepala Sekolah &amp; Bendahara BOSP. Gunakan tombol Preview untuk melihat isi file PDF sebelum diunduh.</p>';
   html += '<div class="card mb-3"><div class="card-body">'
     + '<div class="fw-bold mb-2">Unduh Semua Menu (1 File) — Triwulan '+tw+'</div>'
-    + '<button type="button" class="btn btn-success btn-sm me-2" '+act('unduhSemuaMenuExcel',[tw])+'>'+ICONS.download+'Unduh Semua (Excel)</button>'
-    + '<button type="button" class="btn btn-danger btn-sm me-2" '+act('unduhSemuaMenuPdf',[tw])+'>'+ICONS.download+'Unduh Semua (PDF)</button>'
-    + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('previewSemuaMenuPdf',[tw])+'>'+ICONS.pencil+'Preview PDF</button>'
+    + '<button type="button" class="btn btn-success btn-sm me-2" '+act('unduhSemuaMenuExcel',[tw])+'>'+'Unduh Semua (Excel)</button>'
+    + '<button type="button" class="btn btn-danger btn-sm me-2" '+act('unduhSemuaMenuPdf',[tw])+'>'+'Unduh Semua (PDF)</button>'
+    + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('previewSemuaMenuPdf',[tw])+'>'+'Preview PDF</button>'
     + '<div class="text-muted small mt-2">Nama file: "LPJ BOSP Triwulan '+tw+' '+esc(state.tahunAnggaran)+'" — setiap menu (termasuk Laporan Realisasi BOSP-Form BPK) jadi sheet/halaman terpisah dalam satu file.</div>'
     + '</div></div>';
   html += '<div class="card"><div class="card-body"><div class="fw-bold mb-2">Unduh Per Menu — Triwulan '+tw+'</div>'
@@ -8025,9 +8041,9 @@ function viewUnduhanLpjBospTahunan(){
   let html = '<p class="text-muted small">Unduh laporan LPJ BOSP gabungan Triwulan 1 sampai 4 (1 Tahun Anggaran) dalam format Excel atau PDF, diurutkan berdasarkan Nama Sekolah lalu Tanggal, dan sudah dilengkapi kolom tanda tangan Kepala Sekolah &amp; Bendahara BOSP. Gunakan tombol Preview untuk melihat isi file PDF sebelum diunduh.</p>';
   html += '<div class="card mb-3"><div class="card-body">'
     + '<div class="fw-bold mb-2">Unduh Semua Menu (1 File) — Gabungan 1 Tahun Anggaran (Triwulan 1 s.d 4)</div>'
-    + '<button type="button" class="btn btn-success btn-sm me-2" '+act('unduhSemuaMenuExcelTahunan')+'>'+ICONS.download+'Unduh Semua (Excel)</button>'
-    + '<button type="button" class="btn btn-danger btn-sm me-2" '+act('unduhSemuaMenuPdfTahunan')+'>'+ICONS.download+'Unduh Semua (PDF)</button>'
-    + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('previewSemuaMenuPdfTahunan')+'>'+ICONS.pencil+'Preview PDF</button>'
+    + '<button type="button" class="btn btn-success btn-sm me-2" '+act('unduhSemuaMenuExcelTahunan')+'>'+'Unduh Semua (Excel)</button>'
+    + '<button type="button" class="btn btn-danger btn-sm me-2" '+act('unduhSemuaMenuPdfTahunan')+'>'+'Unduh Semua (PDF)</button>'
+    + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('previewSemuaMenuPdfTahunan')+'>'+'Preview PDF</button>'
     + '<div class="text-muted small mt-2">Nama file: "LPJ BOSP 1 Tahun Anggaran '+esc(state.tahunAnggaran)+'" — setiap menu (termasuk Laporan Realisasi BOSP-Form BPK) jadi sheet/halaman terpisah, data Triwulan 1-4 digabung dan diurutkan berdasarkan Nama Sekolah lalu Tanggal.</div>'
     + '</div></div>';
   html += '<div class="card"><div class="card-body"><div class="fw-bold mb-2">Unduh Per Menu — Gabungan 1 Tahun Anggaran (Triwulan 1 s.d 4)</div>'
@@ -8420,7 +8436,7 @@ function viewInformasiPopupAdmin(){
     + '<div class="col-6"><label class="form-label">Pukul</label><input type="time" class="form-control" id="infoPopupJam" value="'+jamTayang+'"/></div>'
     + '</div>'
     + '<p class="text-muted small mb-3">Kosongkan tanggal kalau ingin Pop-Up langsung tayang begitu diaktifkan. Kalau diisi, Pop-Up baru akan muncul mulai tanggal &amp; pukul tersebut (mengikuti waktu perangkat pengunjung).</p>'
-    + '<button type="button" class="btn btn-primary" '+act('simpanInformasiPopup')+'>'+ICONS.check+'Simpan Pop-Up</button>'
+    + '<button type="button" class="btn btn-primary" '+act('simpanInformasiPopup')+'>'+'Simpan Pop-Up</button>'
     + '</div></div>';
 }
 async function simpanInformasiPopup(){
@@ -8456,12 +8472,12 @@ function viewInformasiBerjalan(){
           return '<div class="form-check"><input class="form-check-input" type="checkbox" id="'+jid+'"'+(checked?' checked':'')+'/><label class="form-check-label" for="'+jid+'">'+esc(j)+'</label></div>';
         }).join('')
       + '</div>'
-      + '<button type="button" class="btn btn-primary" '+act('saveInformasiClick')+'>'+ICONS.check+'Simpan</button> '
-      + '<button type="button" class="btn btn-secondary" '+act('cancelInformasi')+'>'+ICONS.x+'Batal</button>'
+      + '<button type="button" class="btn btn-primary" '+act('saveInformasiClick')+'>'+'Simpan</button> '
+      + '<button type="button" class="btn btn-secondary" '+act('cancelInformasi')+'>'+'Batal</button>'
       + '</div></div>';
   }
   let html = '<p class="text-muted small">Kelola informasi tugas/pekerjaan Admin sesuai timeline. Informasi yang sudah diklik "Kirim" akan tampil sebagai running text merah bold di bagian atas akses seluruh Admin.</p>';
-  html += '<div class="mb-3"><button class="btn btn-primary" '+act('editInformasi',['new'])+'>'+'<img src="'+TAMBAH_DATA_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Tambah Data"/>'+'Tambah Informasi</button></div>';
+  html += '<div class="mb-3"><button class="btn btn-primary" '+act('editInformasi',['new'])+'>'+'Tambah Informasi</button></div>';
   html += '<div class="card"><div class="card-body"><div class="table-responsive"><table class="table table-hover align-middle">'
     + '<thead><tr><th>No</th><th>Judul</th><th>Isi</th><th>Tujuan (Jabatan)</th><th>Batas Waktu</th><th>Status</th><th class="text-center">Aksi</th></tr></thead><tbody>';
   html += informasiList.length===0 ? '<tr><td colspan="7" class="text-center text-muted py-4">Belum ada Informasi.</td></tr>' : informasiList.map(function(x, i){
@@ -8472,9 +8488,9 @@ function viewInformasiBerjalan(){
       + '<td class="text-center">'
       + (x.terkirim
         ? '<button class="btn btn-sm btn-outline-warning me-1" '+act('batalKirimInformasi',[x.id])+'>Batal Kirim</button>'
-        : '<button class="btn btn-sm btn-outline-success me-1" '+act('kirimInformasi',[x.id])+'>'+ICONS.check+'Kirim</button>')
-      + '<button class="btn btn-sm btn-outline-primary me-1" '+act('editInformasi',[x.id])+'>'+ICONS.pencil+'</button>'
-      + '<button class="btn btn-sm btn-outline-danger" '+act('hapusInformasi',[x.id])+'>'+ICONS.trash+'</button>'
+        : '<button class="btn btn-sm btn-outline-success me-1" '+act('kirimInformasi',[x.id])+'>'+'Kirim</button>')
+      + '<button class="btn btn-sm btn-outline-primary me-1" '+act('editInformasi',[x.id])+'>'+'Edit</button>'
+      + '<button class="btn btn-sm btn-outline-danger" '+act('hapusInformasi',[x.id])+'>'+'Hapus</button>'
       + '</td></tr>';
   }).join('');
   html += '</tbody></table></div></div></div>';
@@ -8526,7 +8542,7 @@ function viewPengaturanTampilan(){
 
     + '</div>'
     + '<div class="d-flex gap-2 mt-3">'
-    + '<button type="button" class="btn btn-primary" '+act('simpanPengaturanTampilan')+'>'+ICONS.check+'Simpan Pengaturan</button>'
+    + '<button type="button" class="btn btn-primary" '+act('simpanPengaturanTampilan')+'>'+'Simpan Pengaturan</button>'
     + '<button type="button" class="btn btn-outline-secondary" '+act('resetPengaturanTampilan')+'>Kembalikan ke Bawaan</button>'
     + '</div>'
     + '</div></div>';
@@ -8587,8 +8603,8 @@ function viewPajakLpjBosp(){
     + '<span class="text-muted small">'+zoom+'%</span>'
     + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('pajakZoomIn')+'>'+'<img src="'+ZOOM_IN_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Zoom In"/> Zoom In</button>'
     + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('pajakZoomReset')+'><img src="'+RESET_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Reset"/>Reset</button>'
-    + '<button type="button" class="btn btn-outline-success btn-sm ms-2" '+act('unduhPajakExcel')+'>'+ICONS.download+'Unduh Excel</button>'
-    + '<button type="button" class="btn btn-outline-danger btn-sm" '+act('unduhPajakPdf')+'>'+ICONS.download+'Unduh PDF</button>'
+    + '<button type="button" class="btn btn-outline-success btn-sm ms-2" '+act('unduhPajakExcel')+'>'+'Unduh Excel</button>'
+    + '<button type="button" class="btn btn-outline-danger btn-sm" '+act('unduhPajakPdf')+'>'+'Unduh PDF</button>'
     + '</div>';
 
   html += '<div class="text-center mb-3">'
@@ -8784,13 +8800,13 @@ function viewStockOpname(){
     + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('stockOpnameZoomReset')+'><img src="'+RESET_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Reset"/>Reset</button>'
     + '<button type="button" class="btn btn-outline-success btn-sm ms-2" '+act('exportStockOpnameExcel')+'>'+'<img src="'+EXPORT_EXCEL_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Export Excel"/>Export Excel</button>'
     + '<button type="button" class="btn btn-outline-secondary btn-sm" '+act('importStockOpnameClick')+'>'+'<img src="'+IMPORT_EXCEL_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Import Excel"/>Import Excel</button>'
-    + '<button type="button" class="btn btn-outline-success btn-sm ms-2" '+act('unduhStockOpnameExcel')+'>'+ICONS.download+'Unduh Excel</button>'
-    + '<button type="button" class="btn btn-outline-danger btn-sm" '+act('unduhStockOpnamePdf')+'>'+ICONS.download+'Unduh PDF</button>'
+    + '<button type="button" class="btn btn-outline-success btn-sm ms-2" '+act('unduhStockOpnameExcel')+'>'+'Unduh Excel</button>'
+    + '<button type="button" class="btn btn-outline-danger btn-sm" '+act('unduhStockOpnamePdf')+'>'+'Unduh PDF</button>'
     + '</div>';
 
   html += '<div class="text-center mb-3"><div class="fw-bold" style="font-size:15px;">STOCK OPNAME RINCIAN BARANG PERSEDIAAN BOSP TAHUN ANGGARAN '+esc(state.tahunAnggaran)+'</div></div>';
 
-  html += '<div class="mb-3"><button class="btn btn-primary btn-sm" '+act('tambahStockOpname')+'>'+'<img src="'+TAMBAH_DATA_ICON_URL+'" style="width:18px;height:18px;vertical-align:-3px;margin-right:4px;" alt="Tambah Data"/>'+'Tambah Baris</button></div>';
+  html += '<div class="mb-3"><button class="btn btn-primary btn-sm" '+act('tambahStockOpname')+'>'+'Tambah Baris</button></div>';
 
   html += '<div class="card"><div class="card-body"><div class="table-responsive" style="zoom:'+zoom+'%;"><table class="table table-bordered bosp-table align-middle" style="font-size:11px;">'
     + '<thead><tr>'
@@ -8828,7 +8844,7 @@ function viewStockOpname(){
       + '<td class="text-end" style="'+STOCK_OPNAME_COMPUTED_STYLE+'">'+h.saldoAkhirKuantitas+'</td>'
       + '<td class="text-end" style="'+STOCK_OPNAME_COMPUTED_STYLE+'">'+rupiah(h.jumlahSaldoAkhir)+'</td>'
       + stockOpnameKeteranganCell(x.id, x.keterangan)
-      + '<td class="text-center"><button class="btn btn-sm btn-outline-danger" '+act('hapusStockOpname',[x.id])+'>'+ICONS.trash+'</button></td></tr>';
+      + '<td class="text-center"><button class="btn btn-sm btn-outline-danger" '+act('hapusStockOpname',[x.id])+'>'+'Hapus</button></td></tr>';
   }).join('');
   html += '</tbody></table></div></div></div>'
     + '<div class="text-muted small mt-2">Kolom berwarna hijau muda dihitung otomatis: Jumlah = Harga × Kuantitas; Saldo Awal Kuantitas Triwulan berikutnya otomatis mewarisi Saldo Akhir Kuantitas Triwulan sebelumnya (barang &amp; sekolah yang sama); Saldo Akhir Kuantitas = Saldo Awal + Penerimaan − Pengeluaran. Klik langsung pada sel untuk mengisi data, tersimpan otomatis begitu pindah sel.</div>';
