@@ -23,6 +23,7 @@ app.get('/api/run-migration', async (req, res) => {
     `);
     await pool.query(`INSERT INTO app_settings (id) VALUES (1) ON CONFLICT (id) DO NOTHING;`);
     await pool.query(`ALTER TABLE app_settings ADD COLUMN IF NOT EXISTS dashboard_chart_config JSONB NOT NULL DEFAULT '{}'::jsonb;`);
+    await pool.query(`ALTER TABLE app_settings ADD COLUMN IF NOT EXISTS akses_menu_admin JSONB NOT NULL DEFAULT '{}'::jsonb;`);
     await pool.query(`
       CREATE TABLE IF NOT EXISTS informasi_popup (
         id INT PRIMARY KEY DEFAULT 1 CHECK (id = 1),
