@@ -4063,6 +4063,7 @@ async function validasiNpsnRegistrasi(npsn){
 }
 
 async function simpanRegistrasi(){
+  if(state._sedangSimpanRegistrasi) return; // cegah klik ganda mengirim data 2x
   const npsn = val('regNpsn').trim(), namaOperator = val('regNamaOperator').trim();
   const jabatan = val('regJabatan'), password = val('regPassword');
   const namaAdminBosp = val('regNamaAdminBosp').trim();
@@ -4072,6 +4073,11 @@ async function simpanRegistrasi(){
   if(!/^[0-9]{8}$/.test(npsn)){ showToast('NPSN harus 8 digit angka.'); return; }
   if(password.length < 6){ showToast('Password minimal 6 karakter/angka.'); return; }
   if(!username){ showToast('Isi NPSN terlebih dahulu supaya Username otomatis terisi.'); return; }
+
+  state._sedangSimpanRegistrasi = true;
+  const tombolSimpan = [...document.querySelectorAll('button')].find(function(b){ return b.textContent.trim()==='Simpan Registrasi'; });
+  if(tombolSimpan){ tombolSimpan.disabled = true; tombolSimpan.textContent = 'Menyimpan...'; }
+  try {
 
   // NPSN WAJIB sudah terdaftar oleh Superadmin -- dicek ulang langsung ke server (bukan cuma andalkan status di layar).
   let sk;
@@ -4095,6 +4101,12 @@ async function simpanRegistrasi(){
     showToast('Jabatan "'+jabatan+'" untuk sekolah dengan NPSN '+npsn+' sudah terdaftar oleh Admin lain. Hubungi Superadmin untuk reset atau perubahan data.');
     return;
   }
+  // Cegah operator dengan nama & unit kerja yang SAMA PERSIS tercatat dobel (misal akibat klik ganda sebelumnya).
+  const operatorSudahAda = daftarOperatorSekolahIni.some(function(o){ return o.unit_kerja===npsn && o.nama_ops.trim().toLowerCase()===namaOperator.toLowerCase() && o.jabatan===jabatan; });
+  if(operatorSudahAda){
+    showToast('Data Operator dengan nama & jabatan yang sama untuk sekolah ini sudah ada. Kalau ini bukan Anda yang menambahkan, hubungi Superadmin.');
+    return;
+  }
 
   const subRayonId = sk.sub_rayon_id;
   try {
@@ -4113,6 +4125,10 @@ async function simpanRegistrasi(){
   state.regSekolahDitemukan = null;
   showToast('Registrasi berhasil! Operator "'+namaOperator+'" ('+jabatan+') untuk sekolah "'+sk.nama_sekolah+'" dan akun Admin ("'+username+'") sudah tersimpan. Silakan login.');
   render();
+
+  } finally {
+    state._sedangSimpanRegistrasi = false;
+  }
 }
 
 function viewAksesLogin(){
