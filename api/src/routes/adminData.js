@@ -98,7 +98,7 @@ router.delete('/akun/superadmin/:id', async (req, res) => {
 router.get('/akun/admin', async (req, res) => {
   try {
     const { rows } = await pool.query(`
-      SELECT aa.id, aa.nama, aa.level_admin, aa.jabatan, aa.username, aa.must_change_password, sr.nama_sub_rayon
+      SELECT aa.id, aa.nama, aa.level_admin, aa.jabatan, aa.username, aa.must_change_password, aa.sub_rayon_id, aa.npsn, sr.nama_sub_rayon
       FROM admin_account aa LEFT JOIN sub_rayon sr ON sr.id = aa.sub_rayon_id ORDER BY aa.nama
     `);
     res.json(rows);
