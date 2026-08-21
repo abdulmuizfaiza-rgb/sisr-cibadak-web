@@ -105,12 +105,12 @@ router.get('/akun/admin', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 router.post('/akun/admin', async (req, res) => {
-  const { nama, level_admin, jabatan, sub_rayon_id, username, password } = req.body;
+  const { nama, level_admin, jabatan, npsn, sub_rayon_id, username, password } = req.body;
   try {
     const hash = await bcrypt.hash(password, 10);
     const { rows } = await pool.query(
-      'INSERT INTO admin_account (nama, level_admin, jabatan, sub_rayon_id, username, password_hash) VALUES ($1,$2,$3,$4,$5,$6) RETURNING id, nama, username',
-      [nama, level_admin||null, jabatan, sub_rayon_id||null, username, hash]
+      'INSERT INTO admin_account (nama, level_admin, jabatan, npsn, sub_rayon_id, username, password_hash) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING id, nama, username, npsn',
+      [nama, level_admin||null, jabatan, npsn||null, sub_rayon_id||null, username, hash]
     );
     res.status(201).json(rows[0]);
   } catch (err) {
@@ -119,14 +119,14 @@ router.post('/akun/admin', async (req, res) => {
   }
 });
 router.put('/akun/admin/:id', async (req, res) => {
-  const { nama, level_admin, jabatan, sub_rayon_id, username, password } = req.body;
+  const { nama, level_admin, jabatan, npsn, sub_rayon_id, username, password } = req.body;
   try {
     const hash = password ? await bcrypt.hash(password, 10) : null;
     const { rows } = await pool.query(
-      `UPDATE admin_account SET nama=$1, level_admin=$2, jabatan=$3, sub_rayon_id=$4, username=$5${hash ? ', password_hash=$6' : ''}
-       WHERE id=$${hash ? 7 : 6} RETURNING id, nama, username`,
-      hash ? [nama, level_admin||null, jabatan, sub_rayon_id||null, username, hash, req.params.id]
-           : [nama, level_admin||null, jabatan, sub_rayon_id||null, username, req.params.id]
+      `UPDATE admin_account SET nama=$1, level_admin=$2, jabatan=$3, npsn=$4, sub_rayon_id=$5, username=$6${hash ? ', password_hash=$7' : ''}
+       WHERE id=$${hash ? 8 : 7} RETURNING id, nama, username, npsn`,
+      hash ? [nama, level_admin||null, jabatan, npsn||null, sub_rayon_id||null, username, hash, req.params.id]
+           : [nama, level_admin||null, jabatan, npsn||null, sub_rayon_id||null, username, req.params.id]
     );
     if (rows.length === 0) return res.status(404).json({ error: 'Akun tidak ditemukan.' });
     res.json(rows[0]);
